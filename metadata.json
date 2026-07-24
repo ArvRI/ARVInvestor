@@ -1,0 +1,6 @@
+{
+  "name": "ARV Investor Hub",
+  "description": "Plataforma SaaS de Gestão de Investidores, SPEs, CRM Imobiliário e Portal do Investidor da Construtora ARV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
