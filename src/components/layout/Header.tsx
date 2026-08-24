@@ -133,13 +133,28 @@ export const Header: React.FC<HeaderProps> = ({ onOpenNewInvestor, onOpenNewSPE 
           </div>
         )}
 
-        {/* Dark / Light Mode Toggle */}
+        {/* Dark / Light Mode Toggle Pill */}
         <button
           onClick={toggleDarkMode}
-          className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          title="Alternar Tema Claro/Escuro"
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-medium transition-all ${
+            darkMode
+              ? "bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-700/80 shadow-xs"
+              : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/80 shadow-xs"
+          }`}
+          title={darkMode ? "Alternar para Modo Claro" : "Alternar para Modo Escuro"}
+          aria-label="Alternar Tema Claro/Escuro"
         >
-          {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          {darkMode ? (
+            <>
+              <Sun className="w-4 h-4 text-amber-400 animate-in spin-in-90 duration-300" />
+              <span className="hidden xl:inline text-[11px] font-semibold text-amber-300">Modo Escuro</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-4 h-4 text-slate-600 animate-in spin-in-90 duration-300" />
+              <span className="hidden xl:inline text-[11px] font-semibold text-slate-600">Modo Claro</span>
+            </>
+          )}
         </button>
 
         {/* Notifications Dropdown */}

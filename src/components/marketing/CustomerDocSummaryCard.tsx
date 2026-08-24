@@ -15,6 +15,10 @@ import {
   Check,
   Building,
   Upload,
+  Calendar,
+  Globe,
+  Heart,
+  Mail,
 } from "lucide-react";
 import { MarketingLead } from "../../types";
 import { useApp } from "../../context/AppContext";
@@ -78,57 +82,121 @@ export const CustomerDocSummaryCard: React.FC<CustomerDocSummaryCardProps> = ({
   };
 
   const speName = activeLead.speOfInterest || spes[0]?.name || "SPE ARV Horizon Residence";
-  const matchedSpe = spes.find((s) => s.name === speName) || spes[0];
   const dealValue = activeLead.dealValue || 1200000;
   const brokerName = activeLead.assignedBroker || "Camila Vasconcelos";
 
-  // Document checklist status
-  const docChecklist = [
-    { label: "RG / CNH (Frente e Verso)", file: docs.rg, required: true, desc: "PDF ou Foto em alta resolução do RG com CPF ou CNH dentro do prazo" },
-    { label: "Comprovante de CPF / CNPJ", file: docs.cpf, required: true, desc: "Cartão do CPF / Comprovante de Inscrição da Receita Federal" },
-    { label: "Comprovante de Residência Atualizado", file: docs.residence, required: true, desc: "Conta de Água, Luz ou Telefone fixa emitida há no máximo 90 dias" },
-    { label: "Certidão de Estado Civil / Casamento", file: docs.marriageCert, required: false, desc: "Certidão de Nascimento (solteiro), Casamento ou Pacto Antenupcial" },
-    { label: "Comprovante de Renda / Extrato", file: null, required: false, desc: "Holerite, DECORE ou 3 últimos extratos bancários para análise" },
-    { label: "Dados Bancários & Chave PIX", file: null, required: true, desc: "Comprovante de titularidade da conta para crédito de futuros dividendos" },
-  ];
-
-  const requiredAttachedCount = docChecklist.filter((d) => d.required && !!d.file).length;
-  const isAllRequiredDocsAttached = requiredAttachedCount >= 3;
   const isCpfValid = cpfCnpj !== "Não informado" && cpfCnpj.length >= 11;
   const isEmailValid = email.includes("@");
 
-  const isContractReady = isAllRequiredDocsAttached && isCpfValid && isEmailValid;
+  // The 8 requested client document & data items
+  const clientFieldsList = [
+    {
+      num: "1",
+      label: "Nome completo",
+      val: clientName,
+      file: null,
+      icon: User,
+      isValid: clientName !== "Não informado",
+      desc: "Nome completo impresso conforme documento oficial com foto",
+    },
+    {
+      num: "2",
+      label: "RG e CPF",
+      val: `RG: ${rg} | CPF: ${cpfCnpj}`,
+      file: docs.rg || docs.cpf,
+      icon: ShieldCheck,
+      isValid: isCpfValid && rg !== "Não informado",
+      desc: "Número do RG com órgão emissor e CPF (ou CNH atualizada)",
+    },
+    {
+      num: "3",
+      label: "Data de nascimento",
+      val: birthDate,
+      file: null,
+      icon: Calendar,
+      isValid: birthDate !== "Não informada",
+      desc: "Data de nascimento completa do titular comprador",
+    },
+    {
+      num: "4",
+      label: "Nacionalidade",
+      val: nationality,
+      file: null,
+      icon: Globe,
+      isValid: !!nationality,
+      desc: "País de origem / nacionalidade (ex: Brasileira)",
+    },
+    {
+      num: "5",
+      label: "Estado civil",
+      val: civilStatus,
+      file: docs.marriageCert,
+      icon: Heart,
+      isValid: civilStatus !== "Não informado",
+      desc: "Estado civil e certidão correspondente (Solteiro/Casado/Divorciado)",
+    },
+    {
+      num: "6",
+      label: "Endereço completo",
+      val: `${address}, ${city} - ${state} (CEP: ${zipCode})`,
+      file: docs.residence,
+      icon: MapPin,
+      isValid: address !== "Não informado",
+      desc: "Logradouro, número, complemento, bairro, cidade/UF e CEP",
+    },
+    {
+      num: "7",
+      label: "E-mail",
+      val: email,
+      file: null,
+      icon: Mail,
+      isValid: isEmailValid,
+      desc: "E-mail oficial para recebimento da minuta e assinatura digital",
+    },
+    {
+      num: "8",
+      label: "Telefone",
+      val: phone,
+      file: null,
+      icon: Phone,
+      isValid: phone !== "Não informado",
+      desc: "Telefone com DDD / WhatsApp direto para notificações",
+    },
+  ];
+
+  const validFieldsCount = clientFieldsList.filter((item) => item.isValid).length;
+  const isContractReady = validFieldsCount >= 6 && isCpfValid && isEmailValid;
 
   // Formatted Message tailored for the Broker who made the sale
   const formattedBrokerGuideMessage = `
 ==================================================
 📋 CHECKLIST DE DOCUMENTOS DO CLIENTE (GUIA DO CORRETOR)
-CONSTRUTORA ARV INC. • DEPARTAMENTO COMERCIAL / MARKETING
+CONSTRUTORA ARV INC. • DEPARTAMENTO COMERCIAL
 ==================================================
 
 Prezado(a) Corretor(a): ${brokerName}
-Parabéns pela venda do imóvel! 👏🚀
+Parabéns pela negociação! 👏🚀
 
 📍 DADOS DA OPERAÇÃO:
 • Cliente Comprador: ${clientName}
 • Empreendimento / SPE: ${speName}
 • Valor da Operação: R$ ${Number(dealValue).toLocaleString("pt-BR")}
 
-Para darmos entrada na confecção da Minuta do Contrato no nosso setor jurídico, por gentileza solicite e nos envie os seguintes documentos do cliente:
-
-📌 DOCUMENTOS OBRIGATÓRIOS A SOLICITAR AO CLIENTE:
-1. 📄 RG e CPF (ou CNH atualizada) - Frente e Verso em PDF/Foto Legível
-2. 🏠 Comprovante de Residência recente (Água, Luz ou Telefone - emitido nos últimos 90 dias)
-3. 💍 Certidão de Estado Civil (Nascimento se Solteiro, Casamento se Casado)
-4. 🏦 Dados Bancários completos para pagamento de Dividendos/Rendimentos (Banco, Agência, C/C e Chave PIX)
-5. 💼 Comprovante de Renda / Extrato Bancário (quando houver parcelamento)
+📌 LISTA DE DOCUMENTOS E DADOS DO CLIENTE PARA A MINUTA:
+1. 👤 Nome completo: ${clientName}
+2. 🪪 RG e CPF: RG ${rg} | CPF ${cpfCnpj}
+3. 🎂 Data de nascimento: ${birthDate}
+4. 🌐 Nacionalidade: ${nationality}
+5. 💍 Estado civil: ${civilStatus}
+6. 🏠 Endereço completo: ${address}, ${city} - ${state} (CEP: ${zipCode})
+7. ✉️ E-mail: ${email}
+8. 📞 Telefone: ${phone}
 
 --------------------------------------------------
-STATUS ATUAL NO SISTEMA DA ARV:
-- RG/CNH: ${docs.rg ? "✅ Já recebido" : "⚠️ SOLICITAR AO CLIENTE"}
-- CPF: ${docs.cpf ? "✅ Já recebido" : "⚠️ SOLICITAR AO CLIENTE"}
-- Comprovante Residência: ${docs.residence ? "✅ Já recebido" : "⚠️ SOLICITAR AO CLIENTE"}
-- Certidão Estado Civil: ${docs.marriageCert ? "✅ Já recebido" : "⚠️ SOLICITAR AO CLIENTE"}
+STATUS DOS ANEXOS NO SISTEMA ARV:
+- RG/CPF: ${docs.rg || docs.cpf ? "✅ Recebido (" + (docs.rg || docs.cpf) + ")" : "⚠️ PENDENTE - SOLICITAR"}
+- Comprovante de Residência: ${docs.residence ? "✅ Recebido (" + docs.residence + ")" : "⚠️ PENDENTE - SOLICITAR"}
+- Certidão de Estado Civil: ${docs.marriageCert ? "✅ Recebido (" + docs.marriageCert + ")" : "⚠️ PENDENTE - SOLICITAR"}
 
 Qualquer dúvida, fale com o Backoffice Comercial ARV!
 ==================================================
@@ -149,54 +217,33 @@ Qualquer dúvida, fale com o Backoffice Comercial ARV!
   const formattedTextForContract = `
 ==================================================
 RESUMO UNIFICADO DE DOCUMENTAÇÃO DO CLIENTE
-PARA ELABORAÇÃO DE CONTRATO - CONSTRUTORA ARV INC.
+LISTA OFICIAL DE CADASTRO - CONSTRUTORA ARV INC.
 ==================================================
 
-1. DADOS PESSOAIS DO COMPRADOR
+1. Nome completo: ${clientName}
+2. RG e CPF: RG ${rg} | CPF ${cpfCnpj}
+3. Data de nascimento: ${birthDate}
+4. Nacionalidade: ${nationality}
+5. Estado civil: ${civilStatus}
+6. Endereço completo: ${address}, ${city} - ${state} (CEP: ${zipCode})
+7. E-mail: ${email}
+8. Telefone: ${phone}
+
 --------------------------------------------------
-- Nome Completo: ${clientName}
-- CPF / CNPJ: ${cpfCnpj}
-- RG / Órgão Emissor: ${rg}
-- Data de Nascimento: ${birthDate}
-- Estado Civil: ${civilStatus}
+DADOS COMPLEMENTARES DA OPERAÇÃO:
 - Profissão: ${profession}
-- Nacionalidade: ${nationality}
-
-2. CONTATOS
---------------------------------------------------
-- Telefone Principal: ${phone}
-- WhatsApp Direct: ${whatsapp}
-- E-mail: ${email}
-
-3. ENDEREÇO RESIDENCIAL / FISCAL
---------------------------------------------------
-- Logradouro/Nº: ${address}
-- CEP: ${zipCode}
-- Cidade/UF: ${city} - ${state}
-
-4. DADOS BANCÁRIOS (DIVIDENDOS / APORTES)
---------------------------------------------------
-- Banco: ${bank}
-- Agência: ${agency}
-- Conta Corrente: ${account}
-- Chave PIX: ${pix}
+- Dados Bancários: ${bank} • Ag: ${agency} • C/C: ${account} (PIX: ${pix})
 - Renda Declarada: R$ ${Number(income).toLocaleString("pt-BR")}
-
-5. DADOS DO EMPREENDIMENTO / NEGÓCIO
---------------------------------------------------
-- SPE / Empreendimento: ${speName}
-- Valor do Negócio (VGV): R$ ${Number(dealValue).toLocaleString("pt-BR")}
+- SPE de Destino: ${speName}
+- Valor do Negócio: R$ ${Number(dealValue).toLocaleString("pt-BR")}
 - Corretor Responsável: ${brokerName}
-- Data de Transmissão: ${new Date().toLocaleDateString("pt-BR")}
 
-6. CHECKLIST DE DOCUMENTOS ANEXADOS
---------------------------------------------------
-- RG/CNH: ${docs.rg ? "ANEXADO (" + docs.rg + ")" : "PENDENTE"}
-- CPF: ${docs.cpf ? "ANEXADO (" + docs.cpf + ")" : "PENDENTE"}
-- Comp. Residência: ${docs.residence ? "ANEXADO (" + docs.residence + ")" : "PENDENTE"}
+CHECKLIST DE DOCUMENTOS ANEXADOS:
+- RG/CPF: ${docs.rg || docs.cpf ? "ANEXADO (" + (docs.rg || docs.cpf) + ")" : "PENDENTE"}
+- Comprovante de Residência: ${docs.residence ? "ANEXADO (" + docs.residence + ")" : "PENDENTE"}
 - Certidão Estado Civil: ${docs.marriageCert ? "ANEXADO (" + docs.marriageCert + ")" : "PENDENTE"}
 
-STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA" : "PENDENTE DE COMPLEMENTAÇÃO"}
+STATUS DA ANÁLISE ARV: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA" : "PENDENTE DE COMPLEMENTAÇÃO"}
 ==================================================
 `.trim();
 
@@ -211,13 +258,13 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
   };
 
   const handleSendWhatsAppRequest = () => {
-    const missingDocs = docChecklist
-      .filter((d) => !d.file)
+    const missingDocs = clientFieldsList
+      .filter((d) => !d.isValid)
       .map((d) => d.label)
       .join(", ");
 
     const text = encodeURIComponent(
-      `Olá ${clientName}, tudo bem? Aqui é ${brokerName} da Construtora ARV. Para darmos andamento à minuta do seu contrato para a ${speName}, precisamos que nos envie: ${
+      `Olá ${clientName}, tudo bem? Aqui é ${brokerName} da Construtora ARV. Para darmos andamento à minuta do seu contrato para a ${speName}, precisamos confirmar alguns dados/documentos: ${
         missingDocs || "seus documentos de cadastro"
       }. Podemos lhe auxiliar por aqui!`
     );
@@ -236,7 +283,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
           </div>
           <div>
             <div className="flex items-center gap-2 text-xs text-blue-400 font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" /> Card Resumo Unificado de Documentação do Cliente
+              <ShieldCheck className="w-4 h-4" /> Card Resumo de Documentos do Cliente (ARV Inc.)
             </div>
             <h2 className="text-xl font-bold mt-1 text-white">
               {clientName}
@@ -252,11 +299,11 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
         <div className="flex items-center gap-3">
           {isContractReady ? (
             <div className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> APTO PARA EMISSÃO DO CONTRATO
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> DADOS COMPLETOS ({validFieldsCount}/8)
             </div>
           ) : (
             <div className="px-3 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
-              <AlertTriangle className="w-4 h-4 text-amber-400" /> COMPLEMENTAÇÃO PENDENTE
+              <AlertTriangle className="w-4 h-4 text-amber-400" /> PENDENTE ({validFieldsCount}/8 PREENCHIDOS)
             </div>
           )}
 
@@ -284,7 +331,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
               }`}
             >
-              <Send className="w-3.5 h-3.5" /> 📲 Guia do Corretor (O que solicitar ao Cliente)
+              <Send className="w-3.5 h-3.5" /> 📲 Guia do Corretor (Lista de Solicitação)
             </button>
             <button
               onClick={() => setCardMode("contract_summary")}
@@ -294,7 +341,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
               }`}
             >
-              <FileText className="w-3.5 h-3.5" /> 📋 Ficha Completa (Para Minuta de Contrato)
+              <FileText className="w-3.5 h-3.5" /> 📋 Ficha Completa dos 8 Itens
             </button>
           </div>
 
@@ -311,13 +358,13 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-bold uppercase text-[10px] tracking-wider">
-                    <Sparkles className="w-3 h-3 text-blue-300" /> Card de Instrições do Comercial ao Corretor
+                    <Sparkles className="w-3 h-3 text-blue-300" /> Lista de Documentos & Dados Obrigatórios do Cliente
                   </div>
                   <h3 className="text-lg font-extrabold text-white mt-1">
-                    Checklist de Documentos a Solicitar do Cliente Comprador
+                    Resumo dos 8 Itens do Cliente
                   </h3>
                   <p className="text-xs text-slate-300 mt-0.5">
-                    Envie este resumo ao corretor responsável <span className="font-bold text-blue-300">{brokerName}</span> para acelerar a emissão do contrato.
+                    Envie a lista ao corretor responsável <span className="font-bold text-blue-300">{brokerName}</span> para conferência ou solicitação dos dados do cliente.
                   </p>
                 </div>
 
@@ -339,7 +386,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
                       </>
                     ) : (
                       <>
-                        <Copy className="w-4 h-4" /> Copiar Texto
+                        <Copy className="w-4 h-4" /> Copiar Texto Formatado
                       </>
                     )}
                   </button>
@@ -381,56 +428,61 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
               </div>
             </div>
 
-            {/* Document Required Grid Items */}
+            {/* Official 8 Items Grid */}
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-blue-600" /> Relação Visual de Documentos Necessários
+              <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-blue-600" /> Lista Oficial de Documentos e Dados do Cliente (8 Itens)
+                </span>
+                <span className="text-[11px] text-slate-500 font-normal">
+                  {validFieldsCount} de 8 itens verificados
+                </span>
               </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {docChecklist.map((doc, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-xl border transition-all space-y-2 flex flex-col justify-between ${
-                      doc.file
-                        ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60"
-                        : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
-                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-                          {doc.label}
-                        </span>
-                        {doc.file ? (
-                          <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1 border border-emerald-300 shrink-0">
-                            <CheckCircle2 className="w-3 h-3" /> ANEXADO
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {clientFieldsList.map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <div
+                      key={item.num}
+                      className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+                        item.isValid
+                          ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60"
+                          : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-slate-100">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold text-[10px] flex items-center justify-center shrink-0">
+                              {item.num}
+                            </span>
+                            {item.label}
                           </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-300 font-bold text-[10px] flex items-center gap-1 border border-amber-300 shrink-0">
-                            <AlertTriangle className="w-3 h-3" /> SOLICITAR
-                          </span>
-                        )}
+
+                          {item.isValid ? (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] flex items-center gap-0.5 border border-emerald-300 shrink-0">
+                              <CheckCircle2 className="w-3 h-3" /> OK
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-300 font-bold text-[9px] flex items-center gap-0.5 border border-amber-300 shrink-0">
+                              <AlertTriangle className="w-3 h-3" /> SOLICITAR
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-100 break-words flex items-start gap-1.5 mt-1">
+                          <IconComp className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+                          <span>{item.val}</span>
+                        </div>
                       </div>
 
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                        {doc.desc}
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                        {item.desc}
                       </p>
                     </div>
-
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-[10px]">
-                      <span className="text-slate-500 font-medium">
-                        {doc.required ? "• Requisito Obrigatório" : "• Opcional / Recomendado"}
-                      </span>
-                      {doc.file && (
-                        <span className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold truncate max-w-[120px]">
-                          {doc.file}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -438,7 +490,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
             <div className="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-[11px] border border-slate-800 space-y-2">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                 <span className="text-blue-400 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1.5">
-                  <Send className="w-3.5 h-3.5" /> Mensagem Formatada Pronta para Enviar ao Corretor
+                  <Send className="w-3.5 h-3.5" /> Mensagem Formatada dos 8 Itens Pronta para Enviar
                 </span>
                 <button
                   onClick={handleCopyBrokerMsg}
@@ -461,7 +513,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
             <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
               <div className="text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                Ficha Pronta para Cópia e Preenchimento Inicial da Minuta
+                Ficha dos 8 Documentos e Dados do Cliente (Minuta ARV)
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -479,7 +531,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" /> Copiar Resumo para o Contrato
+                      <Copy className="w-3.5 h-3.5" /> Copiar Resumo dos 8 Itens
                     </>
                   )}
                 </button>
@@ -488,7 +540,7 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
                   onClick={handleSendWhatsAppRequest}
                   className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs"
                 >
-                  <Send className="w-3.5 h-3.5" /> Solicitar Docs (WhatsApp)
+                  <Send className="w-3.5 h-3.5" /> Solicitar Dados (WhatsApp)
                 </button>
 
                 <button
@@ -500,164 +552,139 @@ STATUS FINAL DA ANÁLISE: ${isContractReady ? "APROVADO PARA EMISSÃO DE MINUTA"
               </div>
             </div>
 
-        {/* 4 Grid Columns Summary Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Box 1: Dados Pessoais */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
-            <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-1.5">
-              <User className="w-3.5 h-3.5" /> 1. Dados do Investidor
-            </div>
-            <div className="space-y-1">
-              <div>
-                <span className="text-slate-400 block text-[10px]">Nome Completo</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100">{clientName}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-1 pt-1">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">CPF / CNPJ</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{cpfCnpj}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">RG / Órgão</span>
-                  <span className="font-mono text-slate-800 dark:text-slate-200">{rg}</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 pt-1">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Nascimento</span>
-                  <span className="text-slate-800 dark:text-slate-200">{birthDate}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Estado Civil</span>
-                  <span className="text-slate-800 dark:text-slate-200">{civilStatus}</span>
-                </div>
-              </div>
-              <div className="pt-1">
-                <span className="text-slate-400 block text-[10px]">Profissão / Atuação</span>
-                <span className="text-slate-800 dark:text-slate-200 font-medium">{profession}</span>
-              </div>
-            </div>
-          </div>
+            {/* List Table View for the 8 requested items */}
+            <div className="bg-slate-50/50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3">
+              <h4 className="font-bold text-blue-700 dark:text-blue-400 uppercase text-xs tracking-wider flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                <span className="flex items-center gap-1.5">
+                  <FileText className="w-4 h-4" /> Ficha Resumo do Cliente — 8 Itens Solicitados
+                </span>
+                <span className="text-[10px] text-slate-500 font-semibold">
+                  STATUS DA FICHA: {isContractReady ? "COMPLETA" : "PENDENTE DADOS"}
+                </span>
+              </h4>
 
-          {/* Box 2: Contatos & Endereço */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
-            <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-1.5">
-              <MapPin className="w-3.5 h-3.5" /> 2. Contato & Endereço
-            </div>
-            <div className="space-y-1">
-              <div>
-                <span className="text-slate-400 block text-[10px]">E-mail para Notificações</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">{email}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-1 pt-1">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Telefone</span>
-                  <span className="text-slate-800 dark:text-slate-200">{phone}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">WhatsApp</span>
-                  <span className="text-emerald-600 font-semibold">{whatsapp}</span>
-                </div>
-              </div>
-              <div className="pt-1">
-                <span className="text-slate-400 block text-[10px]">Endereço Completo</span>
-                <span className="text-slate-800 dark:text-slate-200 block font-medium">{address}</span>
-              </div>
-              <div className="pt-1">
-                <span className="text-slate-400 block text-[10px]">Cidade / Estado / CEP</span>
-                <span className="text-slate-800 dark:text-slate-200">{city} - {state} (CEP: {zipCode})</span>
-              </div>
-            </div>
-          </div>
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {clientFieldsList.map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <div key={item.num} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-start gap-2 sm:w-1/3">
+                        <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                          {item.num}
+                        </span>
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1">
+                            <IconComp className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            {item.label}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">{item.desc}</span>
+                        </div>
+                      </div>
 
-          {/* Box 3: Dados Bancários & Negócio */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
-            <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-1.5">
-              <CreditCard className="w-3.5 h-3.5" /> 3. Dados Bancários & SPE
-            </div>
-            <div className="space-y-1">
-              <div>
-                <span className="text-slate-400 block text-[10px]">SPE de Destino</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100">{speName}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-1 pt-1">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Valor do Negócio</span>
-                  <span className="font-bold text-emerald-600">R$ {(Number(dealValue) / 1000).toLocaleString("pt-BR")} mil</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Corretor</span>
-                  <span className="text-slate-800 dark:text-slate-200 font-medium">{brokerName}</span>
-                </div>
-              </div>
-              <div className="pt-1 border-t border-slate-200 dark:border-slate-700 space-y-0.5">
-                <span className="text-slate-400 block text-[10px]">Conta Dividendos</span>
-                <div className="font-mono text-[11px] text-slate-800 dark:text-slate-200">
-                  {bank} • Ag: {agency} • C/C: {account}
-                </div>
-                <div className="text-[10px] text-slate-500">Chave PIX: {pix}</div>
-              </div>
-            </div>
-          </div>
+                      <div className="sm:w-1/2 font-semibold text-slate-800 dark:text-slate-200 text-xs break-words">
+                        {item.val}
+                      </div>
 
-          {/* Box 4: Central de Documentos Obrigatórios */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
-            <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-1.5">
-              <Upload className="w-3.5 h-3.5" /> 4. Status de Anexo de Docs
+                      <div className="sm:w-1/6 flex justify-end">
+                        {item.isValid ? (
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1 border border-emerald-300">
+                            <CheckCircle2 className="w-3 h-3" /> OK
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-300 font-bold text-[10px] flex items-center gap-1 border border-amber-300">
+                            <AlertTriangle className="w-3 h-3" /> PENDENTE
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="space-y-2 pt-1">
-              {docChecklist.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium truncate max-w-[140px]">
-                    {item.label}
+            {/* Additional details & Document Uploads */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
+                <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-1.5">
+                  <CreditCard className="w-3.5 h-3.5" /> Dados Bancários e Negócio
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">SPE / Empreendimento</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{speName}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Valor do Negócio (VGV)</span>
+                      <span className="font-bold text-emerald-600">R$ {Number(dealValue).toLocaleString("pt-BR")}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Profissão</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{profession}</span>
+                    </div>
+                  </div>
+                  <div className="pt-1 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px]">Dados Bancários (Dividendos)</span>
+                    <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 block">
+                      {bank} • Ag: {agency} • C/C: {account}
+                    </span>
+                    <span className="text-[10px] text-slate-500">Chave PIX: {pix}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
+                <div className="font-bold text-blue-700 dark:text-blue-400 uppercase text-[10px] tracking-wider flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5" /> Arquivos Anexados
                   </span>
-                  {item.file ? (
-                    <span className="text-emerald-600 font-bold text-[10px] flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                      <CheckCircle2 className="w-3 h-3" /> OK
-                    </span>
-                  ) : (
-                    <span className="text-amber-600 font-bold text-[10px] bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
-                      PENDENTE
-                    </span>
+                  {onNavigateToContract && (
+                    <button
+                      onClick={onNavigateToContract}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                    >
+                      Ir para Minutas →
+                    </button>
                   )}
                 </div>
-              ))}
+                <div className="space-y-1.5 pt-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">RG / CPF Anexado:</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{docs.rg || docs.cpf || "Pendente"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Comprovante de Residência:</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{docs.residence || "Pendente"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Certidão Estado Civil:</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{docs.marriageCert || "Pendente"}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {onNavigateToContract && (
-              <div className="pt-2">
+            {/* Formatted Text Box Preview */}
+            <div className="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-[11px] border border-slate-800 space-y-2">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                <span className="text-blue-400 font-bold uppercase text-[10px] tracking-wider">
+                  Prévia do Texto dos 8 Itens (Pronto para Copiar/Colar)
+                </span>
                 <button
-                  onClick={onNavigateToContract}
-                  className="w-full py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1 shadow-xs"
+                  onClick={handleCopyText}
+                  className="text-xs text-blue-300 hover:text-white underline font-sans font-bold flex items-center gap-1"
                 >
-                  <FileText className="w-3.5 h-3.5" /> Ir para Minuta (Card 7)
+                  <Copy className="w-3 h-3" /> Copiar Tudo
                 </button>
               </div>
-            )}
+              <pre className="whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto text-slate-300 scrollbar-thin">
+                {formattedTextForContract}
+              </pre>
+            </div>
           </div>
-        </div>
-
-        {/* Formatted Text Box Preview */}
-        <div className="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-[11px] border border-slate-800 space-y-2">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-            <span className="text-blue-400 font-bold uppercase text-[10px] tracking-wider">
-              Prévia do Bloco Formatado (Pronto para Copiar/Colar)
-            </span>
-            <button
-              onClick={handleCopyText}
-              className="text-xs text-blue-300 hover:text-white underline font-sans font-bold flex items-center gap-1"
-            >
-              <Copy className="w-3 h-3" /> Copiar Tudo
-            </button>
-          </div>
-          <pre className="whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto text-slate-300 scrollbar-thin">
-            {formattedTextForContract}
-          </pre>
-        </div>
+        )}
       </div>
-    )}
-  </div>
-</div>
+    </div>
   );
 };
+

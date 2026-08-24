@@ -10,6 +10,9 @@ import {
   Building,
   TrendingUp,
   Target,
+  Sun,
+  Moon,
+  Database,
 } from "lucide-react";
 import { ARVLogo } from "../common/ARVLogo";
 import { useApp } from "../../context/AppContext";
@@ -21,7 +24,8 @@ export type ActiveTab =
   | "communication"
   | "dashboard"
   | "intelligence"
-  | "marketing";
+  | "marketing"
+  | "sienge";
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -29,7 +33,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
-  const { currentRole, investors, spes, contracts } = useApp();
+  const { currentRole, investors, spes, contracts, darkMode, toggleDarkMode } = useApp();
 
   const navItems = [
     {
@@ -80,6 +84,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       icon: BrainCircuit,
       badge: "Score",
       allowedRoles: ["ADMIN", "RI_MANAGER", "COMERCIAL", "MARKETING"],
+    },
+    {
+      id: "sienge" as ActiveTab,
+      label: "Integração Sienge ERP",
+      icon: Database,
+      badge: "OAuth 2.0",
+      allowedRoles: ["ADMIN", "RI_MANAGER", "FINANCEIRO", "COMERCIAL", "ENGENHARIA", "MARKETING"],
     },
   ];
 
@@ -150,17 +161,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         </nav>
       </div>
 
-      {/* Bottom Profile / Footer Info */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-        <div className="flex items-center gap-3">
+      {/* Bottom Profile / Footer Info & Theme Switcher */}
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center justify-between">
+        <div className="flex items-center gap-3 overflow-hidden">
           <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
             AR
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">Admin ARV</p>
-            <p className="text-[10px] text-slate-500 truncate">Gerente Relac. • {contracts.length} Contratos</p>
+            <p className="text-[10px] text-slate-500 truncate">{contracts.length} Contratos</p>
           </div>
         </div>
+
+        <button
+          onClick={toggleDarkMode}
+          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+          title={darkMode ? "Mudar para Tema Claro" : "Mudar para Tema Escuro"}
+          aria-label="Alternar Tema Claro/Escuro"
+        >
+          {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+        </button>
       </div>
     </aside>
   );

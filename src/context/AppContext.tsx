@@ -103,7 +103,17 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>("ADMIN");
   const [currentInvestorId, setCurrentInvestorId] = useState<string>("inv-01");
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem("arv_theme");
+    if (saved !== null) {
+      return saved === "dark";
+    }
+    return (
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  });
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   // Entities state with persistence in localStorage if available
@@ -181,12 +191,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem("arv_newsletters", JSON.stringify(newsletters));
   }, [newsletters]);
 
-  // Handle Dark mode class toggle on <html> element
+  // Handle Dark mode class toggle on <html> element and persist preference
   useEffect(() => {
+    localStorage.setItem("arv_theme", darkMode ? "dark" : "light");
     if (darkMode) {
       document.documentElement.classList.add("dark");
+      document.body.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark");
     }
   }, [darkMode]);
 

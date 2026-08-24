@@ -63,8 +63,8 @@ export const CommunicationHub: React.FC = () => {
 
   // Filter estimated audience count
   const estimatedAudience = investors.filter((inv) => {
-    if (targetSegment === "PLATINUM") return inv.tier === "Platinum";
-    if (targetSegment === "GOLD") return inv.tier === "Gold";
+    if (targetSegment === "PLATINUM") return inv.tier === "Private" || inv.tier === "Prime" || (inv.tier as string) === "Platinum";
+    if (targetSegment === "GOLD") return inv.tier === "Select" || (inv.tier as string) === "Gold";
     if (targetSegment === "FORTALEZA") return inv.city.includes("Fortaleza");
     return true;
   }).length;
@@ -78,7 +78,7 @@ export const CommunicationHub: React.FC = () => {
       message: campaignMessage,
       date: new Date().toISOString().split("T")[0],
       read: false,
-      speId: "spe-01",
+      type: "info",
     });
 
     setIsSentSuccess(true);

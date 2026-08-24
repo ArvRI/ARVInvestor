@@ -116,7 +116,7 @@ export const SmartNewsletterPreview: React.FC<SmartNewsletterPreviewProps> = ({
           <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-6 mb-6">
-            <ARVLogo size="md" variant="light" className="h-10" />
+            <ARVLogo size="md" lightMode={true} className="h-10" />
             <div className="text-right">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Informativo Oficial aos Investidores

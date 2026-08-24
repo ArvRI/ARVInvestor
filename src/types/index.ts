@@ -7,7 +7,7 @@ export type UserRole =
   | "MARKETING"
   | "INVESTOR";
 
-export type InvestorTier = "Platinum" | "Gold" | "Silver" | "Bronze" | "Risco";
+export type InvestorTier = "Essencial" | "Select" | "Prime" | "Private" | "Institucional";
 
 export type ConstructionStage =
   | "Fundação"
@@ -117,6 +117,41 @@ export interface StageProgress {
   status: "Concluído" | "Em Andamento" | "A Iniciar";
 }
 
+export interface WeeklyWorkItem {
+  category: "ELÉTRICA" | "ALVENARIA" | "REBOCO" | "CONTRAMARCOS" | string;
+  service: string;
+  currentPercentage: number;
+  dailyChecklist: {
+    segunda?: number;
+    terca?: number;
+    quarta?: number;
+    quinta?: number;
+    sexta?: number;
+    sabado?: number;
+  };
+  forecastPercentage: number;
+  observations?: string;
+}
+
+export interface LaborTeamItem {
+  functionName: string;
+  quantity: number;
+  company: string;
+  observation?: string;
+}
+
+export interface WeeklyConstructionReport {
+  id: string;
+  speId: string;
+  obraName: string;
+  location: string;
+  engineer: string;
+  referenceWeek: string;
+  plannedServices: WeeklyWorkItem[];
+  laborTeam: LaborTeamItem[];
+  totalWorkers: number;
+}
+
 export interface ConstructionProgress {
   id: string;
   speId: string;
@@ -128,6 +163,7 @@ export interface ConstructionProgress {
   videos: string[];
   droneUrl?: string;
   reportUrl?: string;
+  weeklyReport?: WeeklyConstructionReport;
 }
 
 export interface Payment {
@@ -305,6 +341,12 @@ export interface MarketingLead {
   electronicSignatureStatus?: "Pendente" | "Enviado" | "Assinado" | "Recusado";
   electronicSignatureProvider?: "Clicksign" | "DocuSign" | "ZapSign";
   electronicSignatureUrl?: string;
+  // Campos de Integração RD Station API / Webhook
+  rdStationId?: string;
+  rdConversionIdentifier?: string;
+  rdLeadUrl?: string;
+  rdSyncStatus?: "Sincronizado via Webhook" | "Sincronizado via API" | "Manual";
+  rdSyncTimestamp?: string;
 }
 
 export interface CustomerOnboardingProgress {

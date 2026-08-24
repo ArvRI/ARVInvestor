@@ -49,6 +49,7 @@ export const FunnelKanban: React.FC<FunnelKanbanProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBroker, setFilterBroker] = useState("ALL");
   const [filterSpe, setFilterSpe] = useState("ALL");
+  const [filterOrigin, setFilterOrigin] = useState("ALL");
 
   const filteredLeads = leads.filter((l) => {
     const matchesSearch =
@@ -59,8 +60,12 @@ export const FunnelKanban: React.FC<FunnelKanbanProps> = ({
 
     const matchesBroker = filterBroker === "ALL" || l.assignedBroker === filterBroker;
     const matchesSpe = filterSpe === "ALL" || l.speOfInterest === filterSpe;
+    const matchesOrigin =
+      filterOrigin === "ALL" ||
+      (filterOrigin === "RD_STATION" && (l.rdStationId || l.originCampaign?.toLowerCase().includes("rd station") || l.utmSource?.includes("rd"))) ||
+      (filterOrigin === "OTHER" && !(l.rdStationId || l.originCampaign?.toLowerCase().includes("rd station") || l.utmSource?.includes("rd")));
 
-    return matchesSearch && matchesBroker && matchesSpe;
+    return matchesSearch && matchesBroker && matchesSpe && matchesOrigin;
   });
 
   const getNextStage = (current: LeadFunnelStage): LeadFunnelStage | null => {
@@ -115,6 +120,16 @@ export const FunnelKanban: React.FC<FunnelKanbanProps> = ({
                 {s.name}
               </option>
             ))}
+          </select>
+
+          <select
+            value={filterOrigin}
+            onChange={(e) => setFilterOrigin(e.target.value)}
+            className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-blue-700 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="ALL">Origem: Todas</option>
+            <option value="RD_STATION">Origem: RD Station API</option>
+            <option value="OTHER">Origem: Outras Fontes</option>
           </select>
         </div>
 
@@ -200,6 +215,20 @@ export const FunnelKanban: React.FC<FunnelKanbanProps> = ({
                               <Tag className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                               <span className="truncate">{lead.originCampaign}</span>
                             </div>
+
+                            {/* RD Station Source Badge */}
+                            {(lead.rdStationId || lead.originCampaign?.toLowerCase().includes("rd station") || lead.utmSource?.includes("rd")) && (
+                              <div className="pt-1 flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                                  <Sparkles className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" /> RD Station API
+                                </span>
+                                {lead.rdSyncStatus && (
+                                  <span className="text-[9px] text-slate-400 truncate">
+                                    {lead.rdSyncStatus}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           {/* Quick Action Buttons */}
@@ -298,6 +327,36 @@ export const FunnelKanban: React.FC<FunnelKanbanProps> = ({
                   <div><strong>UTM Medium:</strong> {selectedLeadModal.utmMedium}</div>
                   <div><strong>UTM Campaign:</strong> {selectedLeadModal.utmCampaign}</div>
                 </div>
+              </div>
+
+              {/* RD Station API Tracking */}
+              <div className="col-span-2 bg-blue-50/70 dark:bg-blue-950/40 p-3 rounded-lg border border-blue-200 dark:border-blue-800/60 space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Atribuição RD Station API
+                  </span>
+                  {selectedLeadModal.rdSyncStatus && (
+                    <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                      {selectedLeadModal.rdSyncStatus}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 dark:text-slate-300">
+                  <div><strong>ID RD Station:</strong> {selectedLeadModal.rdStationId || "rd-ct-auto"}</div>
+                  <div><strong>Gatilho Conversão:</strong> {selectedLeadModal.rdConversionIdentifier || "LP_Ebook_SPE"}</div>
+                </div>
+                {selectedLeadModal.rdLeadUrl && (
+                  <div className="pt-1 text-[11px]">
+                    <a
+                      href={selectedLeadModal.rdLeadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1"
+                    >
+                      Ver lead no CRM RD Station <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div>

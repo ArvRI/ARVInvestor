@@ -689,7 +689,7 @@ export const BrokerOnboardingWizard: React.FC<BrokerOnboardingWizardProps> = ({
                 </label>
                 <select
                   value={formData.electronicSignatureProvider}
-                  onChange={(e) => setFormData({ ...formData, electronicSignatureProvider: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, electronicSignatureProvider: e.target.value as "Clicksign" | "DocuSign" | "ZapSign" })}
                   className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-blue-700 dark:text-blue-400"
                 >
                   <option value="Clicksign">Clicksign Digital</option>

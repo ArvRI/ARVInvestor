@@ -27,8 +27,26 @@ import {
 import { useApp } from "../../context/AppContext";
 
 export const ExecutiveDashboard: React.FC = () => {
-  const { spes, investors, contracts } = useApp();
+  const { spes, investors, contracts, darkMode } = useApp();
   const [selectedSpeFilter, setSelectedSpeFilter] = useState<string>("ALL");
+
+  const tooltipStyle = darkMode
+    ? {
+        backgroundColor: "#0f172a",
+        border: "1px solid #334155",
+        borderRadius: "8px",
+        color: "#f8fafc",
+        fontSize: "12px",
+        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
+      }
+    : {
+        backgroundColor: "#ffffff",
+        border: "1px solid #cbd5e1",
+        borderRadius: "8px",
+        color: "#0f172a",
+        fontSize: "12px",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      };
 
   // KPI calculations
   const totalVgvAll = spes.reduce((acc, s) => acc + s.totalVgv, 0);
@@ -155,15 +173,7 @@ export const ExecutiveDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} />
                 <YAxis stroke="#94a3b8" fontSize={10} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "#fff",
-                    fontSize: "12px",
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="captado" fill="#1d4ed8" name="Captado (R$M)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="meta" fill="#cbd5e1" name="Meta VGV (R$M)" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -190,15 +200,7 @@ export const ExecutiveDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="mes" stroke="#94a3b8" fontSize={10} />
                 <YAxis stroke="#94a3b8" fontSize={10} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "#fff",
-                    fontSize: "12px",
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="valor" stroke="#1d4ed8" fillOpacity={1} fill="url(#colorCap)" name="R$ Milhões" />
               </AreaChart>
             </ResponsiveContainer>
@@ -219,7 +221,7 @@ export const ExecutiveDashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -263,9 +265,9 @@ export const ExecutiveDashboard: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 rounded text-xs font-bold italic ${
-                        inv.tier === "Platinum"
+                        inv.tier === "Private" || inv.tier === "Prime" || (inv.tier as string) === "Platinum"
                           ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
-                          : inv.tier === "Gold"
+                          : inv.tier === "Select" || (inv.tier as string) === "Gold"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                       }`}>

@@ -9,6 +9,7 @@ import { CommunicationHub } from "./components/communication/CommunicationHub";
 import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { InvestorIntelligence } from "./components/intelligence/InvestorIntelligence";
 import { MarketingCRMHub } from "./components/marketing/MarketingCRMHub";
+import { SiengeIntegrationHub } from "./components/sienge/SiengeIntegrationHub";
 import { GlobalSearchModal } from "./components/common/GlobalSearchModal";
 import { NewInvestorModal } from "./components/common/NewInvestorModal";
 import { NewSPEModal } from "./components/common/NewSPEModal";
@@ -45,6 +46,7 @@ const MainLayout: React.FC = () => {
             {activeTab === "dashboard" && <ExecutiveDashboard />}
             {activeTab === "intelligence" && <InvestorIntelligence />}
             {activeTab === "marketing" && <MarketingCRMHub />}
+            {activeTab === "sienge" && <SiengeIntegrationHub />}
           </div>
         </main>
       </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 
 interface ARVLogoProps {
   className?: string;
@@ -13,6 +13,9 @@ export const ARVLogo: React.FC<ARVLogoProps> = ({
   showTagline = false,
   lightMode = false,
 }) => {
+  const uniqueId = useId().replace(/:/g, "");
+  const maskId = `arv-v-mask-${uniqueId}`;
+
   const sizeClasses = {
     sm: "h-6",
     md: "h-8",
@@ -20,7 +23,7 @@ export const ARVLogo: React.FC<ARVLogoProps> = ({
     xl: "h-14",
   };
 
-  const primaryColor = lightMode ? "#FFFFFF" : "#2B88C4";
+  const primaryColor = lightMode ? "#FFFFFF" : "#3182CE";
   const taglineColor = lightMode ? "#94A3B8" : "#64748B";
 
   return (
@@ -33,13 +36,32 @@ export const ARVLogo: React.FC<ARVLogoProps> = ({
         className="h-full w-auto block shrink-0 drop-shadow-2xs"
         preserveAspectRatio="xMinYMid meet"
       >
+        <defs>
+          <mask id={maskId}>
+            <rect x="0" y="0" width="380" height="120" fill="white" />
+            {/* Signature white crescent arc gap separating R loop from V left arm */}
+            <path
+              d="M 224 -8 C 268 14 268 58 224 78"
+              stroke="black"
+              strokeWidth="12"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </mask>
+        </defs>
+
         <g fill={primaryColor}>
           {/* A */}
-          <path d="M 118 120 L 78 120 L 61 74 L 23 74 L 10 120 L 0 120 L 44 0 L 75 0 Z M 56 61 L 42 19 L 27 61 Z" />
+          <path d="M 0 120 L 39 120 L 53 78 L 88 78 L 102 120 L 140 120 L 89 0 L 51 0 Z M 70 24 L 81 58 L 60 58 Z" />
+
           {/* R */}
-          <path d="M 126 0 L 182 0 C 208 0 224 13 224 33 C 224 50 211 60 193 64 L 230 120 L 195 120 L 162 68 L 151 68 L 151 120 L 126 120 Z M 151 21 L 151 48 L 178 48 C 191 48 198 42 198 34 C 198 25 190 21 177 21 Z" />
-          {/* V */}
-          <path d="M 232 0 L 263 0 L 299 87 L 334 0 L 366 0 L 314 120 L 282 120 Z" />
+          <path d="M 132 0 H 202 C 238 0 258 14 258 35 C 258 54 240 64 212 66 L 250 120 H 208 L 175 66 H 164 V 120 H 132 V 0 Z M 164 20 V 46 H 198 C 210 46 222 41 222 33 C 222 25 210 20 198 20 H 164 Z" />
+
+          {/* V with signature crescent cut */}
+          <path
+            mask={`url(#${maskId})`}
+            d="M 228 0 L 266 0 L 302 88 L 338 0 L 378 0 L 322 120 L 282 120 Z"
+          />
         </g>
       </svg>
 
@@ -56,3 +78,4 @@ export const ARVLogo: React.FC<ARVLogoProps> = ({
     </div>
   );
 };
+

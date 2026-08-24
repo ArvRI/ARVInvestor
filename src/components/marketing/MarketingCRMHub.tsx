@@ -19,7 +19,9 @@ import { BrokerOnboardingWizard } from "./BrokerOnboardingWizard";
 import { CustomerDocSummaryCard } from "./CustomerDocSummaryCard";
 import { CustomerOnboardingFlow } from "./CustomerOnboardingFlow";
 import { MarketingManagerPanel } from "./MarketingManagerPanel";
+import { RDStationIntegrationCard } from "./RDStationIntegrationCard";
 import { MarketingLead } from "../../types";
+
 import { useApp } from "../../context/AppContext";
 
 export const MarketingCRMHub: React.FC = () => {
@@ -160,6 +162,9 @@ export const MarketingCRMHub: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* RD Station API Integration Panel */}
+      <RDStationIntegrationCard />
 
       {/* Main Content View Switcher */}
       {activeSubTab === "funnel" && (

@@ -3,22 +3,33 @@ import { Search, X, User, Building, FileText, ArrowRight } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
 interface GlobalSearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelectInvestor: (id: string) => void;
-  onSelectSPE: (id: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSelectInvestor?: (id: string) => void;
+  onSelectSPE?: (id: string) => void;
 }
 
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
-  isOpen,
-  onClose,
+  isOpen: propsIsOpen,
+  onClose: propsOnClose,
   onSelectInvestor,
   onSelectSPE,
 }) => {
-  const { investors, spes, documents, contracts } = useApp();
+  const {
+    investors,
+    spes,
+    documents,
+    contracts,
+    isSearchOpen,
+    setIsSearchOpen,
+    setCurrentInvestorId,
+  } = useApp();
   const [query, setQuery] = useState("");
 
-  if (!isOpen) return null;
+  const modalOpen = propsIsOpen !== undefined ? propsIsOpen : isSearchOpen;
+  const handleClose = propsOnClose || (() => setIsSearchOpen(false));
+
+  if (!modalOpen) return null;
 
   const q = query.trim().toLowerCase();
 
@@ -78,7 +89,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="ml-2 px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
           >
             ESC
@@ -110,8 +121,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   <div
                     key={inv.id}
                     onClick={() => {
-                      onSelectInvestor(inv.id);
-                      onClose();
+                      if (onSelectInvestor) onSelectInvestor(inv.id);
+                      else setCurrentInvestorId(inv.id);
+                      handleClose();
                     }}
                     className="flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl cursor-pointer group transition-colors"
                   >
@@ -144,8 +156,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   <div
                     key={spe.id}
                     onClick={() => {
-                      onSelectSPE(spe.id);
-                      onClose();
+                      if (onSelectSPE) onSelectSPE(spe.id);
+                      handleClose();
                     }}
                     className="flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl cursor-pointer group transition-colors"
                   >

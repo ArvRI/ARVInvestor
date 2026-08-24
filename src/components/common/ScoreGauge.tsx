@@ -19,14 +19,14 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
   const angle = (clampedScore / 100) * 180 - 90; // -90 to +90 deg
 
   const tierColors: Record<InvestorTier, { stroke: string; bg: string; text: string; label: string }> = {
-    Platinum: { stroke: "#8B5CF6", bg: "bg-purple-100 dark:bg-purple-950/60", text: "text-purple-700 dark:text-purple-300", label: "Platinum VIP" },
-    Gold: { stroke: "#EAB308", bg: "bg-amber-100 dark:bg-amber-950/60", text: "text-amber-700 dark:text-amber-300", label: "Gold Premium" },
-    Silver: { stroke: "#94A3B8", bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-700 dark:text-slate-300", label: "Silver" },
-    Bronze: { stroke: "#D97706", bg: "bg-orange-100 dark:bg-orange-950/60", text: "text-orange-700 dark:text-orange-300", label: "Bronze" },
-    Risco: { stroke: "#EF4444", bg: "bg-rose-100 dark:bg-rose-950/60", text: "text-rose-700 dark:text-rose-300", label: "Em Risco" },
+    Private: { stroke: "#8B5CF6", bg: "bg-purple-100 dark:bg-purple-950/60", text: "text-purple-700 dark:text-purple-300", label: "Private (> R$ 2M)" },
+    Prime: { stroke: "#10B981", bg: "bg-emerald-100 dark:bg-emerald-950/60", text: "text-emerald-700 dark:text-emerald-300", label: "Prime (R$ 800k - 2M)" },
+    Select: { stroke: "#EAB308", bg: "bg-amber-100 dark:bg-amber-950/60", text: "text-amber-700 dark:text-amber-300", label: "Select (R$ 300k - 800k)" },
+    Essencial: { stroke: "#3B82F6", bg: "bg-blue-100 dark:bg-blue-950/60", text: "text-blue-700 dark:text-blue-300", label: "Essencial (Até R$ 300k)" },
+    Institucional: { stroke: "#6366F1", bg: "bg-indigo-100 dark:bg-indigo-950/60", text: "text-indigo-700 dark:text-indigo-300", label: "Institucional (Empresas/Fundos)" },
   };
 
-  const currentConfig = tierColors[tier] || tierColors.Silver;
+  const currentConfig = tierColors[tier] || tierColors.Essencial;
 
   const dimensions = {
     sm: { width: 120, height: 75, r: 42, sw: 10, fontSize: "text-xl" },

@@ -18,6 +18,7 @@ import {
 import { useApp } from "../../context/AppContext";
 import { ARVLogo } from "../common/ARVLogo";
 import { SmartNewsletterPreview } from "../communication/SmartNewsletterPreview";
+import { WeeklyConstructionReportViewer } from "../spes/WeeklyConstructionReportViewer";
 
 export const InvestorPortal: React.FC = () => {
   const {
@@ -444,6 +445,14 @@ export const InvestorPortal: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Weekly Construction Report (Planejamento Semanal de Obra - Meridiem) */}
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+            <WeeklyConstructionReportViewer
+              report={selectedProgress.weeklyReport}
+              speName={selectedSpe.name}
+            />
           </div>
         </div>
       )}

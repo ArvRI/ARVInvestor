@@ -54,7 +54,7 @@ export const CRMInvestors: React.FC<CRMInvestorsProps> = ({ onOpenNewInvestor })
   // Global KPIs
   const totalInvestedAll = contracts.reduce((acc, c) => acc + c.investedAmount, 0);
   const avgTicket = investors.length ? Math.round(totalInvestedAll / investors.length) : 0;
-  const platinumCount = investors.filter((i) => i.tier === "Platinum").length;
+  const platinumCount = investors.filter((i) => i.tier === "Private" || i.tier === "Prime" || (i.tier as string) === "Platinum").length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -201,11 +201,11 @@ export const CRMInvestors: React.FC<CRMInvestorsProps> = ({ onOpenNewInvestor })
                   const invInvested = invContracts.reduce((acc, c) => acc + c.investedAmount, 0);
 
                   const tierBadges: Record<InvestorTier, string> = {
-                    Platinum: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-                    Gold: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-                    Silver: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-                    Bronze: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-                    Risco: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+                    Private: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+                    Prime: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+                    Select: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+                    Essencial: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+                    Institucional: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
                   };
 
                   return (

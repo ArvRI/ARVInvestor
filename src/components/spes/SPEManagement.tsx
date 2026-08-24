@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { SPE, ConstructionStage } from "../../types";
+import { WeeklyConstructionReportViewer } from "./WeeklyConstructionReportViewer";
 
 interface SPEManagementProps {
   onOpenNewSPE: () => void;
@@ -37,7 +38,7 @@ export const SPEManagement: React.FC<SPEManagementProps> = ({ onOpenNewSPE }) =>
 
   const [selectedSpeId, setSelectedSpeId] = useState<string>(spes[0]?.id || "spe-01");
   const [activeSpeTab, setActiveSpeTab] = useState<
-    "overview" | "captable" | "progress" | "suppliers" | "docs" | "gallery"
+    "overview" | "captable" | "progress" | "weekly_report" | "suppliers" | "docs" | "gallery"
   >("overview");
 
   const [editingStage, setEditingStage] = useState<ConstructionStage | null>(null);
@@ -157,6 +158,7 @@ export const SPEManagement: React.FC<SPEManagementProps> = ({ onOpenNewSPE }) =>
             { id: "overview", label: "Ficha Técnica", icon: Building },
             { id: "captable", label: `Cap Table de Investidores (${capTableList.length})`, icon: Users },
             { id: "progress", label: `Cronograma Físico (${speProgress.overallPercentage}%)`, icon: TrendingUp },
+            { id: "weekly_report", label: "📋 Relatório Semanal de Obra", icon: FileText },
             { id: "suppliers", label: `Contratos Fornecedores (${speSuppliers.length})`, icon: Briefcase },
             { id: "docs", label: `Documentação & Licenças (${speDocs.length})`, icon: FileText },
             { id: "gallery", label: "Galeria & Drone", icon: Video },
@@ -288,6 +290,14 @@ export const SPEManagement: React.FC<SPEManagementProps> = ({ onOpenNewSPE }) =>
             ))}
           </div>
         </div>
+      )}
+
+      {/* SUB-TAB: RELATÓRIO SEMANAL DE OBRA */}
+      {activeSpeTab === "weekly_report" && (
+        <WeeklyConstructionReportViewer
+          report={speProgress.weeklyReport}
+          speName={spe.name}
+        />
       )}
 
       {/* SUB-TAB 4: FORNECEDORES */}
