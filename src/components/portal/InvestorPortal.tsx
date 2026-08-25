@@ -19,6 +19,7 @@ import { useApp } from "../../context/AppContext";
 import { ARVLogo } from "../common/ARVLogo";
 import { SmartNewsletterPreview } from "../communication/SmartNewsletterPreview";
 import { WeeklyConstructionReportViewer } from "../spes/WeeklyConstructionReportViewer";
+import { InvestorProfitabilityCard } from "../profitability/InvestorProfitabilityCard";
 
 export const InvestorPortal: React.FC = () => {
   const {
@@ -143,9 +144,15 @@ export const InvestorPortal: React.FC = () => {
 
       {/* SUB-TAB 1: OVERVIEW */}
       {activeSubTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main SPE Summary Cards */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
+          {/* Investor Profitability Benchmark Card */}
+          {myContracts.length > 0 && (
+            <InvestorProfitabilityCard contractId={myContracts[0]?.id} />
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main SPE Summary Cards */}
+            <div className="lg:col-span-2 space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h2 className="font-bold text-slate-800 dark:text-slate-100 text-base mb-4 flex items-center justify-between">
                 <span>Obras que Você Participa ({mySpeList.length})</span>
@@ -289,6 +296,7 @@ export const InvestorPortal: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* SUB-TAB 2: MINHA CARTEIRA */}

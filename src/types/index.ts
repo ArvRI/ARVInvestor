@@ -540,3 +540,95 @@ export interface SmartNewsletter {
   };
 }
 
+// =========================================================================
+// MÓDULO: COMPARATIVO DE PREÇOS & SIMULAÇÃO DE RENTABILIDADE (CDI/IPCA)
+// =========================================================================
+
+export type MarketIndicator = "CDI" | "IPCA" | "SELIC" | "Poupança";
+
+export interface MarketBenchmarkEntry {
+  id: string;
+  referenceMonth: string; // Formato: "AAAA-MM", ex: "2026-07"
+  indicator: MarketIndicator;
+  monthlyRatePercentage: number; // Ex: 0.95 para 0.95% no mês
+  accumulated12MonthsPercentage: number; // Ex: 10.85% nos últimos 12 meses
+  source: string; // Ex: "BACEN", "IBGE", "ANBIMA"
+}
+
+export type BuildingStandard = "Econômico" | "Médio" | "Alto Padrão";
+
+export interface UnitPriceComparison {
+  id: string;
+  unitId: string;
+  speId: string;
+  speName?: string;
+  unitNumber?: string;
+  type?: string;
+  areaM2: number;
+  price: number;
+  pricePerM2: number;
+  region: string; // Ex: "Trindade - Florianópolis / SC"
+  buildingStandard: BuildingStandard;
+  benchmarkAveragePricePerM2Region?: number; // Preço médio de mercado na região para referência externa
+  positioningPercentage: number; // % quanto acima (+) ou abaixo (-) da média regional
+  referenceDate: string; // Ex: "2026-08"
+}
+
+export type AppreciationScenario = "Conservador" | "Moderado" | "Otimista";
+
+export interface ProfitabilityCosts {
+  corretagemPercentage: number; // Ex: 4.0%
+  itbiPercentage: number; // Ex: 2.0%
+  registroAmount: number; // Ex: R$ 3500
+  impostoRendaPercentage: number; // Ex: 15.0% sobre ganho de capital líquido
+}
+
+export interface ProfitabilitySimulation {
+  id: string;
+  contractId?: string; // Se vinculada a um contrato real de investidor
+  unitId?: string;
+  speId?: string;
+  investorName?: string;
+  title?: string;
+  simulatedInvestedAmount?: number;
+  entryDate: string; // "AAAA-MM-DD"
+  exitDate: string; // "AAAA-MM-DD"
+  horizonMonths: number;
+  purchasePrice: number;
+  projectedSalePrice: number;
+  appreciationScenario: AppreciationScenario;
+  appreciationPercentageTotal: number;
+  netProfitAmount: number;
+  netProfitPercentage: number;
+  annualizedReturnPercentage: number; // Retorno anualizado do período
+  customAnnualAppreciationRate?: number;
+  customCdiAnnualRate?: number; // % ao ano customizado do CDI na simulação
+  customIpcaAnnualRate?: number; // % ao ano customizado do IPCA na simulação
+  costsConsidered: ProfitabilityCosts;
+  createdAt: string;
+}
+
+export interface SimulationMonthlyPoint {
+  monthIndex: number;
+  monthLabel: string; // Ex: "Mês 1", "Jan/25"
+  realEstateValue: number;
+  cdiValue: number;
+  ipcaValue: number;
+}
+
+export interface BenchmarkComparisonResult {
+  simulationId: string;
+  realEstateReturnPercentage: number;
+  realEstateAnnualizedPercentage: number;
+  cdiReturnPercentageSamePeriod: number;
+  cdiAnnualizedPercentage?: number;
+  ipcaReturnPercentageSamePeriod: number;
+  ipcaAnnualizedPercentage?: number;
+  realEstateVsCdiPercentagePoints: number; // Retorno Imóvel - Retorno CDI
+  realEstateVsIpcaPercentagePoints: number; // Retorno Imóvel - Retorno IPCA
+  realGainAboveInflationPercentage: number; // Retorno Real descontado IPCA
+  winnerIndicator: "Imóvel" | "CDI" | "IPCA";
+  monthlyEvolution: SimulationMonthlyPoint[];
+  usedCustomIndicators?: boolean;
+}
+

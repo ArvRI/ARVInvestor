@@ -10,12 +10,14 @@ import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { InvestorIntelligence } from "./components/intelligence/InvestorIntelligence";
 import { MarketingCRMHub } from "./components/marketing/MarketingCRMHub";
 import { SiengeIntegrationHub } from "./components/sienge/SiengeIntegrationHub";
+import { PricingManagementHub } from "./components/pricing/PricingManagementHub";
+import { ProfitabilityDashboard } from "./components/profitability/ProfitabilityDashboard";
 import { GlobalSearchModal } from "./components/common/GlobalSearchModal";
 import { NewInvestorModal } from "./components/common/NewInvestorModal";
 import { NewSPEModal } from "./components/common/NewSPEModal";
 
 const MainLayout: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("portal");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("pricing");
   const [isNewInvestorOpen, setIsNewInvestorOpen] = useState(false);
   const [isNewSPEOpen, setIsNewSPEOpen] = useState(false);
 
@@ -39,6 +41,8 @@ const MainLayout: React.FC = () => {
             {activeTab === "crm" && (
               <CRMInvestors onOpenNewInvestor={() => setIsNewInvestorOpen(true)} />
             )}
+            {activeTab === "pricing" && <PricingManagementHub />}
+            {activeTab === "profitability" && <ProfitabilityDashboard />}
             {activeTab === "spes" && (
               <SPEManagement onOpenNewSPE={() => setIsNewSPEOpen(true)} />
             )}

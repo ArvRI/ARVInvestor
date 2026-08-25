@@ -18,6 +18,23 @@ import {
 
 export const initialSPEs: SPE[] = [
   {
+    id: "spe-grid",
+    name: "SPE ARV GRID LTDA",
+    cnpj: "46.789.120/0001-45",
+    address: "Rua Juvêncio Costa esq. Rua Enoé Schutel - Trindade",
+    city: "Florianópolis - SC, 88036-000",
+    manager: "Eng. Jean Carlos Estipe",
+    status: "Em Obras",
+    deadline: "2029-12-30",
+    totalVgv: 48500000,
+    totalCaptação: 36200000,
+    percentSold: 42,
+    progressPercentage: 35,
+    description: "ARV GRID - Empreendimento residencial com studios inteligentes, studios garden com terraço privativo, lojas comerciais e coberturas exclusivas. Registro de Incorporação R-1-3.706.",
+    bannerImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80",
+    mapCoordinates: "-27.5872,-48.5215",
+  },
+  {
     id: "spe-meridiem",
     name: "SPE ARV MERIDIEM - Saco dos Limões",
     cnpj: "42.190.870/0001-99",
@@ -139,6 +156,8 @@ export const initialSPEs: SPE[] = [
 ];
 
 export const initialDevelopments: Development[] = [
+  { id: "dev-grid", speId: "spe-grid", name: "ARV GRID - Trindade", type: "Misto Multi-Family", totalUnits: 106, unitsAvailable: 71, address: "Rua Juvêncio Costa esq. Rua Enoé Schutel - Trindade", coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80", description: "Empreendimento residencial ARV GRID com studios inteligentes, studios garden com terraço privativo, lojas comerciais e coberturas exclusivas. Registro de Incorporação R-1-3.706." },
+  { id: "dev-meridiem", speId: "spe-meridiem", name: "ARV MERIDIEM - Saco dos Limões", type: "Residencial Premium", totalUnits: 48, unitsAvailable: 14, address: "Rua João Motta Espezim, 1093 - Saco dos Limões", coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80", description: "Empreendimento MERIDIEM no Saco dos Limões, Florianópolis. Residencial contemporâneo de alto padrão com controle semanal de obras da Engenharia ARV." },
   { id: "dev-t58", speId: "spe-t58", name: "T58 Spot - Custos Totais", type: "Residencial Premium", totalUnits: 52, unitsAvailable: 2, address: "Av. Prof. Maria Flora Paes Barreto, 15 - Trindade", coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80", description: "Torre T58 Spot com Studios privativos de 27m² a 36m² e Lojas Comerciais." },
   { id: "dev-01", speId: "spe-01", name: "Horizon Tower A - Sky Suites", type: "Residencial Premium", totalUnits: 40, unitsAvailable: 4, address: "Av. Beira Mar, 1050", coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80", description: "Apartamentos de 280m² com piscina privativa na varanda." },
   { id: "dev-02", speId: "spe-01", name: "Horizon Tower B - Ocean View", type: "Residencial Premium", totalUnits: 40, unitsAvailable: 6, address: "Av. Beira Mar, 1050", coverImage: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80", description: "Suítes master com closet duplo e varanda gourmet integrada." },
@@ -1996,10 +2015,89 @@ export const initialContracts: Contract[] = [
     expectedRoiPercentage: 18.5,
     status: "Ativo",
     documentUrl: "#",
+  },
+  {
+    id: "ctr-grid-01",
+    investorId: "inv-t58-01",
+    speId: "spe-grid",
+    developmentId: "dev-grid",
+    unitId: "unit-grid-201",
+    contractNumber: "GRID-201",
+    purchaseDate: "2026-06-15",
+    investedAmount: 445000.0,
+    speSharePercentage: 0.92,
+    expectedRoiPercentage: 19.2,
+    status: "Ativo",
+    documentUrl: "#",
+  },
+  {
+    id: "ctr-grid-02",
+    investorId: "inv-t58-05",
+    speId: "spe-grid",
+    developmentId: "dev-grid",
+    unitId: "unit-grid-101",
+    contractNumber: "GRID-101G",
+    purchaseDate: "2026-07-02",
+    investedAmount: 685000.0,
+    speSharePercentage: 1.41,
+    expectedRoiPercentage: 19.5,
+    status: "Ativo",
+    documentUrl: "#",
+  },
+  {
+    id: "ctr-grid-03",
+    investorId: "inv-t58-07",
+    speId: "spe-grid",
+    developmentId: "dev-grid",
+    unitId: "unit-grid-601",
+    contractNumber: "GRID-601COB",
+    purchaseDate: "2026-07-20",
+    investedAmount: 1280000.0,
+    speSharePercentage: 2.64,
+    expectedRoiPercentage: 20.0,
+    status: "Ativo",
+    documentUrl: "#",
+  },
+  {
+    id: "ctr-grid-04",
+    investorId: "inv-t58-10",
+    speId: "spe-grid",
+    developmentId: "dev-grid",
+    unitId: "unit-grid-com01",
+    contractNumber: "GRID-LOJA01",
+    purchaseDate: "2026-08-01",
+    investedAmount: 960000.0,
+    speSharePercentage: 1.98,
+    expectedRoiPercentage: 19.0,
+    status: "Ativo",
+    documentUrl: "#",
   }
 ];
 
 export const initialConstructionProgresses: ConstructionProgress[] = [
+  {
+    id: "prog-grid",
+    speId: "spe-grid",
+    overallPercentage: 35,
+    lastUpdateDate: "2026-07-28",
+    description: "Empreendimento ARV GRID com fundações 100% concluídas, estruturas em execução acelerada no 3º pavimento e alvenarias perimétricas iniciadas.",
+    photos: [
+      "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80",
+    ],
+    videos: ["https://www.w3schools.com/html/mov_bbb.mp4"],
+    droneUrl: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=80",
+    reportUrl: "#",
+    stages: [
+      { stage: "Fundação", percentage: 100, targetDate: "2025-10-30", status: "Concluído" },
+      { stage: "Estrutura", percentage: 55, targetDate: "2027-06-30", status: "Em Andamento" },
+      { stage: "Alvenaria", percentage: 20, targetDate: "2028-02-28", status: "Em Andamento" },
+      { stage: "Cobertura", percentage: 0, targetDate: "2028-08-30", status: "A Iniciar" },
+      { stage: "Acabamentos", percentage: 0, targetDate: "2029-06-30", status: "A Iniciar" },
+      { stage: "Entrega", percentage: 0, targetDate: "2029-12-30", status: "A Iniciar" },
+    ],
+  },
   {
     id: "prog-meridiem",
     speId: "spe-meridiem",
@@ -2401,3 +2499,17 @@ export const initialNewsletters: SmartNewsletter[] = [
     },
   },
 ];
+
+// Re-export Módulo de Rentabilidade & Comparativos de Preço
+export {
+  initialMarketBenchmarkHistory,
+  initialUnitPriceComparisons,
+  initialProfitabilitySimulations,
+} from "./profitabilityInitialData";
+
+export {
+  calculateAnnualizedReturn,
+  calculateCompoundIndicatorReturn,
+  calculateRealReturn,
+  runProfitabilitySimulation,
+} from "../utils/profitabilityCalculations";

@@ -19,6 +19,10 @@ import {
   CustomerOnboardingProgress,
   LeadFunnelStage,
   SmartNewsletter,
+  MarketBenchmarkEntry,
+  UnitPriceComparison,
+  ProfitabilitySimulation,
+  BenchmarkComparisonResult,
 } from "../types";
 import {
   initialInvestors,
@@ -37,8 +41,13 @@ import {
   initialLeads,
   initialOnboardings,
   initialNewsletters,
+  initialMarketBenchmarkHistory,
+  initialUnitPriceComparisons,
+  initialProfitabilitySimulations,
   calculateScoreBreakdown,
+  runProfitabilitySimulation,
 } from "../data/initialData";
+import { ProfitabilitySimulationInput } from "../utils/profitabilityCalculations";
 
 interface AppContextType {
   currentRole: UserRole;
@@ -62,6 +71,9 @@ interface AppContextType {
   leads: MarketingLead[];
   onboardings: CustomerOnboardingProgress[];
   newsletters: SmartNewsletter[];
+  marketBenchmarkHistory: MarketBenchmarkEntry[];
+  unitPriceComparisons: UnitPriceComparison[];
+  profitabilitySimulations: ProfitabilitySimulation[];
   darkMode: boolean;
   toggleDarkMode: () => void;
   isSearchOpen: boolean;
@@ -96,6 +108,23 @@ interface AppContextType {
   updateOnboardingStep: (onboardingId: string, step: number) => void;
   updateOnboardingChecklist: (onboardingId: string, itemKey: string, value: boolean) => void;
   triggerOnboardingForLead: (leadId: string) => void;
+
+  // Profitability & Price Comparison Actions
+  addMarketBenchmarkEntry: (data: Omit<MarketBenchmarkEntry, "id">) => void;
+  updateMarketBenchmarkEntry: (id: string, updates: Partial<MarketBenchmarkEntry>) => void;
+  deleteMarketBenchmarkEntry: (id: string) => void;
+  addUnitPriceComparison: (data: Omit<UnitPriceComparison, "id">) => void;
+  updateUnitPriceComparison: (id: string, updates: Partial<UnitPriceComparison>) => void;
+  deleteUnitPriceComparison: (id: string) => void;
+  createProfitabilitySimulation: (input: ProfitabilitySimulationInput) => {
+    simulation: ProfitabilitySimulation;
+    comparison: BenchmarkComparisonResult;
+  };
+  deleteProfitabilitySimulation: (id: string) => void;
+  getComparisonForContract: (contractId: string) => {
+    simulation: ProfitabilitySimulation;
+    comparison: BenchmarkComparisonResult;
+  } | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -166,6 +195,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialNewsletters;
   });
 
+  const [marketBenchmarkHistory, setMarketBenchmarkHistory] = useState<MarketBenchmarkEntry[]>(() => {
+    const saved = localStorage.getItem("arv_market_benchmarks");
+    return saved ? JSON.parse(saved) : initialMarketBenchmarkHistory;
+  });
+
+  const [unitPriceComparisons, setUnitPriceComparisons] = useState<UnitPriceComparison[]>(() => {
+    const saved = localStorage.getItem("arv_unit_price_comparisons");
+    return saved ? JSON.parse(saved) : initialUnitPriceComparisons;
+  });
+
+  const [profitabilitySimulations, setProfitabilitySimulations] = useState<ProfitabilitySimulation[]>(() => {
+    const saved = localStorage.getItem("arv_profitability_sims");
+    return saved ? JSON.parse(saved) : initialProfitabilitySimulations;
+  });
+
   // Persist key state
   useEffect(() => {
     localStorage.setItem("arv_investors", JSON.stringify(investors));
@@ -190,6 +234,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem("arv_newsletters", JSON.stringify(newsletters));
   }, [newsletters]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_market_benchmarks", JSON.stringify(marketBenchmarkHistory));
+  }, [marketBenchmarkHistory]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_unit_price_comparisons", JSON.stringify(unitPriceComparisons));
+  }, [unitPriceComparisons]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_profitability_sims", JSON.stringify(profitabilitySimulations));
+  }, [profitabilitySimulations]);
 
   // Handle Dark mode class toggle on <html> element and persist preference
   useEffect(() => {
@@ -666,6 +722,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNewsletters((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Profitability & Price Comparison Action Handlers
+  const addMarketBenchmarkEntry = (data: Omit<MarketBenchmarkEntry, "id">) => {
+    const newEntry: MarketBenchmarkEntry = {
+      ...data,
+      id: `${data.indicator.toLowerCase()}-${data.referenceMonth}-${Date.now().toString(36)}`,
+    };
+    setMarketBenchmarkHistory((prev) => {
+      // Substitui se já existir para o mesmo mês/indicador ou adiciona
+      const filtered = prev.filter(
+        (e) => !(e.indicator === newEntry.indicator && e.referenceMonth === newEntry.referenceMonth)
+      );
+      const updated = [...filtered, newEntry];
+      return updated.sort((a, b) => a.referenceMonth.localeCompare(b.referenceMonth));
+    });
+  };
+
+  const updateMarketBenchmarkEntry = (id: string, updates: Partial<MarketBenchmarkEntry>) => {
+    setMarketBenchmarkHistory((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+    );
+  };
+
+  const deleteMarketBenchmarkEntry = (id: string) => {
+    setMarketBenchmarkHistory((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const addUnitPriceComparison = (data: Omit<UnitPriceComparison, "id">) => {
+    const newId = `upc-${Date.now().toString(36)}`;
+    const newEntry: UnitPriceComparison = {
+      ...data,
+      id: newId,
+    };
+    setUnitPriceComparisons((prev) => [newEntry, ...prev]);
+  };
+
+  const updateUnitPriceComparison = (id: string, updates: Partial<UnitPriceComparison>) => {
+    setUnitPriceComparisons((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+    );
+  };
+
+  const deleteUnitPriceComparison = (id: string) => {
+    setUnitPriceComparisons((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const createProfitabilitySimulation = (input: ProfitabilitySimulationInput) => {
+    const result = runProfitabilitySimulation(input, marketBenchmarkHistory);
+    setProfitabilitySimulations((prev) => [result.simulation, ...prev]);
+    return result;
+  };
+
+  const deleteProfitabilitySimulation = (id: string) => {
+    setProfitabilitySimulations((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const getComparisonForContract = (contractId: string) => {
+    const contract = contracts.find((c) => c.id === contractId);
+    if (!contract) return null;
+
+    const investor = investors.find((i) => i.id === contract.investorId);
+    const spe = spes.find((s) => s.id === contract.speId);
+
+    // Calcular meses decorridos desde a data da compra até hoje (Agosto/2026 como base corrente)
+    const purchaseDate = contract.purchaseDate || "2024-01-01";
+    const [pYear, pMonth] = purchaseDate.split("-").map(Number);
+    const now = new Date();
+    // Ano base de referência da plataforma: 2026
+    const currentYear = 2026;
+    const currentMonth = 8;
+    const elapsedMonths = Math.max(
+      1,
+      (currentYear - pYear) * 12 + (currentMonth - pMonth)
+    );
+
+    // Retorno anual contratual ou esperado
+    const annualExpectedRate = contract.expectedRoiPercentage || 18.0;
+
+    return runProfitabilitySimulation(
+      {
+        contractId: contract.id,
+        unitId: contract.unitId,
+        speId: contract.speId,
+        investorName: investor?.name || "Investidor ARV",
+        title: `${spe?.name || "SPE ARV"} • Contrato ${contract.contractNumber}`,
+        purchasePrice: contract.investedAmount,
+        entryDate: purchaseDate,
+        horizonMonths: elapsedMonths,
+        appreciationScenario: "Moderado",
+        customAnnualAppreciationRate: annualExpectedRate,
+      },
+      marketBenchmarkHistory
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -690,6 +840,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         leads,
         onboardings,
         newsletters,
+        marketBenchmarkHistory,
+        unitPriceComparisons,
+        profitabilitySimulations,
         darkMode,
         toggleDarkMode,
         isSearchOpen,
@@ -718,6 +871,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOnboardingStep,
         updateOnboardingChecklist,
         triggerOnboardingForLead,
+        addMarketBenchmarkEntry,
+        updateMarketBenchmarkEntry,
+        deleteMarketBenchmarkEntry,
+        addUnitPriceComparison,
+        updateUnitPriceComparison,
+        deleteUnitPriceComparison,
+        createProfitabilitySimulation,
+        deleteProfitabilitySimulation,
+        getComparisonForContract,
       }}
     >
       {children}

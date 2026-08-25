@@ -13,6 +13,10 @@ import {
   Sun,
   Moon,
   Database,
+  Calculator,
+  Tag,
+  Receipt,
+  Table,
 } from "lucide-react";
 import { ARVLogo } from "../common/ARVLogo";
 import { useApp } from "../../context/AppContext";
@@ -20,11 +24,13 @@ import { useApp } from "../../context/AppContext";
 export type ActiveTab =
   | "portal"
   | "crm"
+  | "pricing"
+  | "profitability"
+  | "marketing"
   | "spes"
   | "communication"
   | "dashboard"
   | "intelligence"
-  | "marketing"
   | "sienge";
 
 interface SidebarProps {
@@ -49,6 +55,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       icon: Users,
       badge: `${investors.length}`,
       allowedRoles: ["ADMIN", "RI_MANAGER", "COMERCIAL", "MARKETING"],
+    },
+    {
+      id: "pricing" as ActiveTab,
+      label: "Tabela de Vendas & CUB",
+      icon: Table,
+      badge: "Preços",
+      allowedRoles: ["ADMIN", "RI_MANAGER", "COMERCIAL", "FINANCEIRO", "ENGENHARIA", "MARKETING"],
+    },
+    {
+      id: "profitability" as ActiveTab,
+      label: "Rentabilidade & Comparativos",
+      icon: TrendingUp,
+      badge: "CDI / IPCA",
+      allowedRoles: ["ADMIN", "RI_MANAGER", "FINANCEIRO", "COMERCIAL", "INVESTOR", "MARKETING"],
     },
     {
       id: "marketing" as ActiveTab,

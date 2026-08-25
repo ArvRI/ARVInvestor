@@ -16,6 +16,7 @@ import {
 import { useApp } from "../../context/AppContext";
 import { ScoreGauge } from "../common/ScoreGauge";
 import { NewInteractionModal } from "../common/NewInteractionModal";
+import { InvestorProfitabilityCard } from "../profitability/InvestorProfitabilityCard";
 
 interface InvestorDetailModalProps {
   investorId: string | null;
@@ -136,19 +137,23 @@ export const InvestorDetailModal: React.FC<InvestorDetailModalProps> = ({
           )}
 
           {activeTab === "contratos" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {invContracts.map((c) => {
                 const spe = spes.find((s) => s.id === c.speId);
                 return (
-                  <div key={c.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-slate-100">{c.contractNumber} • {spe?.name}</div>
-                      <div className="text-slate-500 mt-0.5">Adquirido em {c.purchaseDate} • Cota {c.speSharePercentage}% SPE</div>
+                  <div key={c.id} className="space-y-3">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{c.contractNumber} • {spe?.name}</div>
+                        <div className="text-slate-500 mt-0.5">Adquirido em {c.purchaseDate} • Cota {c.speSharePercentage}% SPE</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-blue-600 dark:text-blue-400 text-sm">R$ {c.investedAmount.toLocaleString("pt-BR")}</div>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-600 font-bold px-2 py-0.5 rounded-md">{c.status}</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-amber-600 dark:text-amber-400 text-sm">R$ {c.investedAmount.toLocaleString("pt-BR")}</div>
-                      <span className="text-[10px] bg-emerald-500/10 text-emerald-600 font-bold px-2 py-0.5 rounded-md">{c.status}</span>
-                    </div>
+
+                    <InvestorProfitabilityCard contract={c} compact />
                   </div>
                 );
               })}

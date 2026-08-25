@@ -35,3 +35,37 @@
   background: #475569;
 }
 
+@media print {
+  body {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  nav,
+  aside,
+  header,
+  .no-print,
+  button,
+  select,
+  #btn-toggle-cub-simulator,
+  #btn-export-commercial-excel,
+  #btn-export-commercial-pdf,
+  #btn-print-commercial-dashboard {
+    display: none !important;
+  }
+
+  #commercial-sales-dashboard {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
