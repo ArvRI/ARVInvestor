@@ -146,6 +146,8 @@ export const CommercialChartControls: React.FC<CommercialChartControlsProps> = (
               Reservada: { active: "bg-amber-600 text-white border-amber-500", border: "border-amber-200 dark:border-amber-800" },
               Bloqueada: { active: "bg-slate-600 text-white border-slate-500", border: "border-slate-200 dark:border-slate-800" },
               Permuta: { active: "bg-purple-600 text-white border-purple-500", border: "border-purple-200 dark:border-purple-800" },
+              Distratada: { active: "bg-rose-600 text-white border-rose-500", border: "border-rose-200 dark:border-rose-800" },
+              "Em Revenda": { active: "bg-blue-600 text-white border-blue-500", border: "border-blue-200 dark:border-blue-800" },
             };
 
             const cfg = statusColors[st] || { active: "bg-slate-600 text-white border-slate-500", border: "border-slate-200" };

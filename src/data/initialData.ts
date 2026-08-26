@@ -1355,7 +1355,7 @@ export const initialContracts: Contract[] = [
     investedAmount: 329981.6,
     speSharePercentage: 1.96,
     expectedRoiPercentage: 18.5,
-    status: "Ativo",
+    status: "Distratado",
     documentUrl: "#",
   },
   {
@@ -1509,7 +1509,7 @@ export const initialContracts: Contract[] = [
     investedAmount: 315000.0,
     speSharePercentage: 1.87,
     expectedRoiPercentage: 18.5,
-    status: "Ativo",
+    status: "Distratado",
     documentUrl: "#",
   },
   {
@@ -2513,3 +2513,16 @@ export {
   calculateRealReturn,
   runProfitabilitySimulation,
 } from "../utils/profitabilityCalculations";
+
+// Re-export Módulo de Revenda & Gestão de Distratos
+export {
+  initialReturnRecords,
+  initialResaleListings,
+  initialResalePricing,
+  initialResalePaymentConditions,
+  initialResaleLeads,
+  calculateResaleDiscount,
+  validateResalePriceFloor,
+  moveUnitToResaleFlow,
+} from "./resaleInitialData";
+

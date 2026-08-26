@@ -25,6 +25,7 @@ export type ActiveTab =
   | "portal"
   | "crm"
   | "pricing"
+  | "resale"
   | "profitability"
   | "marketing"
   | "spes"
@@ -39,7 +40,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
-  const { currentRole, investors, spes, contracts, darkMode, toggleDarkMode } = useApp();
+  const { currentRole, investors, spes, contracts, resaleListings, darkMode, toggleDarkMode } = useApp();
 
   const navItems = [
     {
@@ -62,6 +63,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       icon: Table,
       badge: "Preços",
       allowedRoles: ["ADMIN", "RI_MANAGER", "COMERCIAL", "FINANCEIRO", "ENGENHARIA", "MARKETING"],
+    },
+    {
+      id: "resale" as ActiveTab,
+      label: "Revenda & Distratos",
+      icon: Tag,
+      badge: `${resaleListings.filter((l) => l.status === "Publicado").length || "Vitrine"}`,
+      allowedRoles: ["ADMIN", "RI_MANAGER", "COMERCIAL", "FINANCEIRO", "MARKETING", "INVESTOR"],
     },
     {
       id: "profitability" as ActiveTab,

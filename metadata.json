@@ -1,6 +1,6 @@
 {
   "name": "ARV Investor Hub",
-  "description": "Plataforma SaaS de Gestão de Investidores, SPEs, Tabela de Vendas & CUB, Comparativo de Preços e Simulação de Rentabilidade vs CDI e IPCA da Construtora ARV.",
+  "description": "Plataforma SaaS de Gestão de Investidores, SPEs, Módulo de Revenda de Unidades & Distratos (Lei 13.786/2018), Tabela de Vendas & CUB, Dashboard Executivo, Relatórios PDF/Excel e Simulação de Rentabilidade vs CDI/IPCA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

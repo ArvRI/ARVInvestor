@@ -83,6 +83,8 @@ export interface Development {
   description: string;
 }
 
+export type UnitStatus = "Disponível" | "Reservada" | "Vendida" | "Distratada" | "Em Revenda";
+
 export interface Unit {
   id: string;
   developmentId: string;
@@ -92,7 +94,7 @@ export interface Unit {
   type: string;
   areaM2: number;
   price: number;
-  status: "Disponível" | "Reservada" | "Vendida";
+  status: "Disponível" | "Reservada" | "Vendida" | "Distratada" | "Em Revenda";
 }
 
 export interface Contract {
@@ -108,6 +110,7 @@ export interface Contract {
   expectedRoiPercentage: number;
   status: "Ativo" | "Concluído" | "Em Negociação" | "Distratado";
   documentUrl: string;
+  resaleListingId?: string; // Mantém rastreabilidade se o contrato foi originado de uma revenda/distrato
 }
 
 export interface StageProgress {
@@ -631,4 +634,113 @@ export interface BenchmarkComparisonResult {
   monthlyEvolution: SimulationMonthlyPoint[];
   usedCustomIndicators?: boolean;
 }
+
+// ============================================================================
+// MÓDULO DE REVENDA DE UNIDADES & GESTÃO DE DISTRATOS / DEVOLUÇÕES
+// ============================================================================
+
+export type ReturnType =
+  | "Distrato Amigável"
+  | "Distrato Judicial"
+  | "Rescisão por Inadimplência"
+  | "Devolução em Leilão/Retomada";
+
+export type ReturnLegalStatus = "Concluído" | "Em Processo Judicial" | "Em Negociação";
+
+export interface ReturnRecord {
+  id: string;
+  unitId: string;
+  speId: string;
+  originalContractId: string;
+  originalInvestorId: string;
+  returnType: ReturnType;
+  returnDate: string; // AAAA-MM-DD
+  originalContractAmount: number; // Valor original do contrato
+  amountRefundedToInvestor: number; // Valor devolvido ao investidor
+  retentionPercentage: number; // Percentual retido pela incorporadora (ex: 25%)
+  penaltyClauseAmount?: number; // Cláusula penal / multas
+  legalStatus: ReturnLegalStatus;
+  notes: string;
+  documentUrl?: string;
+}
+
+export type ResaleListingStatus =
+  | "Em Preparação"
+  | "Publicado"
+  | "Reservado"
+  | "Vendido"
+  | "Pausado";
+
+export interface ResaleListing {
+  id: string;
+  unitId: string;
+  returnRecordId: string;
+  status: ResaleListingStatus;
+  listingTitle: string; // Ex: "Oportunidade — Apto 302 T58 Spot, pronto p/ morar, condições especiais"
+  listingDescription: string; // Texto longo descritivo gerado por IA ou manual
+  shortHeadline?: string; // Versão curta para cards (até 80 caracteres)
+  highlightTags: string[]; // Ex: ["Pronto para morar", "Condição Especial", "Abaixo da Tabela", "Distrato"]
+  photos: string[]; // URLs das fotos
+  floorPlanUrl?: string; // URL da planta
+  publishedAt?: string;
+  publishedBy?: string;
+  expiresAt?: string;
+  viewsCount: number;
+  leadsGeneratedCount: number;
+}
+
+export type ResalePricingReason =
+  | "Estímulo à Liquidez"
+  | "Recuperação Rápida de Caixa"
+  | "Unidade com Desgaste/Uso"
+  | "Alinhamento a Mercado";
+
+export interface ResalePricing {
+  id: string;
+  unitId: string;
+  resaleListingId: string;
+  originalTablePrice: number; // Preço tabela vigente para comparação "de/por"
+  resalePrice: number; // Preço de revenda praticado
+  discountPercentageVsTable: number; // % abaixo da tabela padrão (ex: 10%)
+  pricingReason: ResalePricingReason;
+  minimumAcceptablePrice: number; // Piso de negociação (sigiloso / gestão interna)
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export type ResalePaymentIndexer = "CUB" | "IGP-M" | "IPCA" | "Sem Correção";
+
+export interface ResalePaymentCondition {
+  id: string;
+  resaleListingId: string;
+  name: string; // Ex: "À Vista com Desconto Extra", "Entrada Reduzida + Saldo em 24x"
+  downPaymentPercentage: number; // % de Entrada
+  numberOfInstallments: number; // Quantidade de parcelas
+  indexer: ResalePaymentIndexer;
+  specialDiscountPercentage?: number; // Desconto adicional na condição
+  allowsFinancing: boolean; // Aceita financiamento bancário direto
+  description: string;
+}
+
+export type ResaleLeadStatus =
+  | "Novo"
+  | "Em Atendimento"
+  | "Proposta Enviada"
+  | "Convertido"
+  | "Perdido";
+
+export type ResaleLeadSource = "Vitrine Interna" | "Indicação" | "Site Público";
+
+export interface ResaleLead {
+  id: string;
+  resaleListingId: string;
+  name: string;
+  email: string;
+  phone: string;
+  message?: string;
+  source: ResaleLeadSource;
+  createdAt: string;
+  status: ResaleLeadStatus;
+}
+
 

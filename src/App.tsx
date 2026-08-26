@@ -11,13 +11,14 @@ import { InvestorIntelligence } from "./components/intelligence/InvestorIntellig
 import { MarketingCRMHub } from "./components/marketing/MarketingCRMHub";
 import { SiengeIntegrationHub } from "./components/sienge/SiengeIntegrationHub";
 import { PricingManagementHub } from "./components/pricing/PricingManagementHub";
+import { ResaleManagement } from "./components/resale/ResaleManagement";
 import { ProfitabilityDashboard } from "./components/profitability/ProfitabilityDashboard";
 import { GlobalSearchModal } from "./components/common/GlobalSearchModal";
 import { NewInvestorModal } from "./components/common/NewInvestorModal";
 import { NewSPEModal } from "./components/common/NewSPEModal";
 
 const MainLayout: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("pricing");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("resale");
   const [isNewInvestorOpen, setIsNewInvestorOpen] = useState(false);
   const [isNewSPEOpen, setIsNewSPEOpen] = useState(false);
 
@@ -42,6 +43,7 @@ const MainLayout: React.FC = () => {
               <CRMInvestors onOpenNewInvestor={() => setIsNewInvestorOpen(true)} />
             )}
             {activeTab === "pricing" && <PricingManagementHub />}
+            {activeTab === "resale" && <ResaleManagement />}
             {activeTab === "profitability" && <ProfitabilityDashboard />}
             {activeTab === "spes" && (
               <SPEManagement onOpenNewSPE={() => setIsNewSPEOpen(true)} />

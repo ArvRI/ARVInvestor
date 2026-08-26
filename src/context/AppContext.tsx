@@ -23,6 +23,11 @@ import {
   UnitPriceComparison,
   ProfitabilitySimulation,
   BenchmarkComparisonResult,
+  ReturnRecord,
+  ResaleListing,
+  ResalePricing,
+  ResalePaymentCondition,
+  ResaleLead,
 } from "../types";
 import {
   initialInvestors,
@@ -46,6 +51,14 @@ import {
   initialProfitabilitySimulations,
   calculateScoreBreakdown,
   runProfitabilitySimulation,
+  initialReturnRecords,
+  initialResaleListings,
+  initialResalePricing,
+  initialResalePaymentConditions,
+  initialResaleLeads,
+  calculateResaleDiscount,
+  validateResalePriceFloor,
+  moveUnitToResaleFlow,
 } from "../data/initialData";
 import { ProfitabilitySimulationInput } from "../utils/profitabilityCalculations";
 
@@ -74,6 +87,11 @@ interface AppContextType {
   marketBenchmarkHistory: MarketBenchmarkEntry[];
   unitPriceComparisons: UnitPriceComparison[];
   profitabilitySimulations: ProfitabilitySimulation[];
+  returnRecords: ReturnRecord[];
+  resaleListings: ResaleListing[];
+  resalePricing: ResalePricing[];
+  resalePaymentConditions: ResalePaymentCondition[];
+  resaleLeads: ResaleLead[];
   darkMode: boolean;
   toggleDarkMode: () => void;
   isSearchOpen: boolean;
@@ -125,6 +143,96 @@ interface AppContextType {
     simulation: ProfitabilitySimulation;
     comparison: BenchmarkComparisonResult;
   } | null;
+
+  // Resale & Return Actions
+  addReturnRecord: (data: Omit<ReturnRecord, "id">) => string;
+  registerUnitReturn: (data: {
+    unitId: string;
+    speId: string;
+    originalContractId: string;
+    originalInvestorId: string;
+    returnType: ReturnRecord["returnType"];
+    returnDate: string;
+    originalContractAmount: number;
+    amountRefundedToInvestor: number;
+    retentionPercentage: number;
+    penaltyClauseAmount?: number;
+    legalStatus: ReturnRecord["legalStatus"];
+    notes: string;
+    documentUrl?: string;
+    originalTablePrice?: number;
+    autoStartResale?: boolean;
+    defaultDiscountPercent?: number;
+  }) => { returnRecordId: string; resaleListingId?: string };
+  updateReturnRecord: (id: string, updates: Partial<ReturnRecord>) => void;
+  startResaleFlow: (
+    unitId: string,
+    speId: string,
+    originalContractId: string,
+    originalInvestorId: string,
+    originalContractAmount: number,
+    originalTablePrice: number,
+    defaultDiscountPercent?: number,
+    unitDetails?: { unitNumber?: string; speName?: string; areaM2?: number; type?: string }
+  ) => { returnRecordId: string; resaleListingId: string };
+  addResaleListing: (data: Omit<ResaleListing, "id" | "viewsCount" | "leadsGeneratedCount">) => string;
+  createResaleListing: (
+    unitId: string,
+    data: Partial<Omit<ResaleListing, "id" | "unitId" | "viewsCount" | "leadsGeneratedCount">>
+  ) => string;
+  updateResaleListing: (id: string, updates: Partial<ResaleListing>) => void;
+  publishResaleListing: (id: string, overrideFloorCheck?: boolean) => { success: boolean; error?: string };
+  pauseResaleListing: (id: string) => void;
+  reserveResaleListing: (id: string, leadInfo?: Partial<ResaleLead>) => void;
+  markResaleAsSold: (
+    listingId: string,
+    saleData: {
+      investorId?: string;
+      buyerName: string;
+      buyerEmail?: string;
+      buyerPhone?: string;
+      contractAmount: number;
+      purchaseDate?: string;
+      speSharePercentage?: number;
+    }
+  ) => string;
+  setResalePricing: (
+    resaleListingId: string,
+    data: {
+      originalTablePrice: number;
+      resalePrice: number;
+      pricingReason: ResalePricing["pricingReason"];
+      minimumAcceptablePrice: number;
+      approvedBy?: string;
+    }
+  ) => { success: boolean; error?: string };
+  updateResalePricing: (resaleListingId: string, updates: Partial<ResalePricing>) => void;
+  addResalePaymentCondition: (data: Omit<ResalePaymentCondition, "id">) => string;
+  updateResalePaymentCondition: (id: string, updates: Partial<ResalePaymentCondition>) => void;
+  deleteResalePaymentCondition: (id: string) => void;
+  addResaleLead: (data: Omit<ResaleLead, "id" | "createdAt">) => string;
+  registerResaleLead: (
+    resaleListingId: string,
+    leadData: Omit<ResaleLead, "id" | "resaleListingId" | "createdAt">
+  ) => string;
+  updateResaleLead: (id: string, updates: Partial<ResaleLead>) => void;
+  incrementListingView: (listingId: string) => void;
+  generateListingDescriptionWithAI: (params: {
+    unitNumber?: string;
+    speName?: string;
+    developmentName?: string;
+    areaM2?: number;
+    type?: string;
+    floor?: string;
+    solarPosition?: string;
+    resalePrice?: number;
+    originalTablePrice?: number;
+    discountPercentage?: number;
+    paymentConditions?: string[];
+    highlightTags?: string[];
+    isDistrato?: boolean;
+    customInstructions?: string;
+  }) => Promise<{ headline: string; description: string; suggestedTags: string[] }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -210,6 +318,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialProfitabilitySimulations;
   });
 
+  const [returnRecords, setReturnRecords] = useState<ReturnRecord[]>(() => {
+    const saved = localStorage.getItem("arv_return_records");
+    return saved ? JSON.parse(saved) : initialReturnRecords;
+  });
+
+  const [resaleListings, setResaleListings] = useState<ResaleListing[]>(() => {
+    const saved = localStorage.getItem("arv_resale_listings");
+    return saved ? JSON.parse(saved) : initialResaleListings;
+  });
+
+  const [resalePricing, setResalePricingList] = useState<ResalePricing[]>(() => {
+    const saved = localStorage.getItem("arv_resale_pricing");
+    return saved ? JSON.parse(saved) : initialResalePricing;
+  });
+
+  const [resalePaymentConditions, setResalePaymentConditions] = useState<ResalePaymentCondition[]>(() => {
+    const saved = localStorage.getItem("arv_resale_conditions");
+    return saved ? JSON.parse(saved) : initialResalePaymentConditions;
+  });
+
+  const [resaleLeads, setResaleLeads] = useState<ResaleLead[]>(() => {
+    const saved = localStorage.getItem("arv_resale_leads");
+    return saved ? JSON.parse(saved) : initialResaleLeads;
+  });
+
   // Persist key state
   useEffect(() => {
     localStorage.setItem("arv_investors", JSON.stringify(investors));
@@ -218,6 +351,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem("arv_spes", JSON.stringify(spes));
   }, [spes]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_contracts", JSON.stringify(contracts));
+  }, [contracts]);
 
   useEffect(() => {
     localStorage.setItem("arv_interactions", JSON.stringify(timelineInteractions));
@@ -246,6 +383,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem("arv_profitability_sims", JSON.stringify(profitabilitySimulations));
   }, [profitabilitySimulations]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_return_records", JSON.stringify(returnRecords));
+  }, [returnRecords]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_resale_listings", JSON.stringify(resaleListings));
+  }, [resaleListings]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_resale_pricing", JSON.stringify(resalePricing));
+  }, [resalePricing]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_resale_conditions", JSON.stringify(resalePaymentConditions));
+  }, [resalePaymentConditions]);
+
+  useEffect(() => {
+    localStorage.setItem("arv_resale_leads", JSON.stringify(resaleLeads));
+  }, [resaleLeads]);
 
   // Handle Dark mode class toggle on <html> element and persist preference
   useEffect(() => {
@@ -816,6 +973,658 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  // ============================================================================
+  // REVENDA & GESTÃO DE DISTRATOS / DEVOLUÇÕES - ACTIONS
+  // ============================================================================
+
+  const addReturnRecord = (data: Omit<ReturnRecord, "id">): string => {
+    const id = `ret-${Date.now()}`;
+    const newRecord: ReturnRecord = { ...data, id };
+    setReturnRecords((prev) => [newRecord, ...prev]);
+
+    // Atualiza o contrato original se existir para status Distratado
+    if (data.originalContractId) {
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.id === data.originalContractId ? { ...c, status: "Distratado" as const } : c
+        )
+      );
+    }
+
+    addNotification({
+      title: "Distrato / Devolução Registrado",
+      message: `Unidade ${data.unitId} teve devolução formalizada sob modalidade "${data.returnType}".`,
+      type: "warning",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return id;
+  };
+
+  const registerUnitReturn = (data: {
+    unitId: string;
+    speId: string;
+    originalContractId: string;
+    originalInvestorId: string;
+    returnType: ReturnRecord["returnType"];
+    returnDate: string;
+    originalContractAmount: number;
+    amountRefundedToInvestor: number;
+    retentionPercentage: number;
+    penaltyClauseAmount?: number;
+    legalStatus: ReturnRecord["legalStatus"];
+    notes: string;
+    documentUrl?: string;
+    originalTablePrice?: number;
+    autoStartResale?: boolean;
+    defaultDiscountPercent?: number;
+  }): { returnRecordId: string; resaleListingId?: string } => {
+    const returnRecordId = `ret-${Date.now()}`;
+    const returnRecord: ReturnRecord = {
+      id: returnRecordId,
+      unitId: data.unitId,
+      speId: data.speId,
+      originalContractId: data.originalContractId,
+      originalInvestorId: data.originalInvestorId,
+      returnType: data.returnType,
+      returnDate: data.returnDate,
+      originalContractAmount: data.originalContractAmount,
+      amountRefundedToInvestor: data.amountRefundedToInvestor,
+      retentionPercentage: data.retentionPercentage,
+      penaltyClauseAmount: data.penaltyClauseAmount,
+      legalStatus: data.legalStatus,
+      notes: data.notes,
+      documentUrl: data.documentUrl,
+    };
+
+    setReturnRecords((prev) => [returnRecord, ...prev]);
+
+    // Atualiza contrato para Distratado
+    if (data.originalContractId) {
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.id === data.originalContractId ? { ...c, status: "Distratado" as const } : c
+        )
+      );
+    }
+
+    let createdResaleListingId: string | undefined = undefined;
+
+    if (data.autoStartResale) {
+      const discount = data.defaultDiscountPercent || 10;
+      const basePrice = data.originalTablePrice || data.originalContractAmount * 1.15;
+      const resalePrice = Math.round(basePrice * (1 - discount / 100));
+
+      const listingId = `rsl-${Date.now()}`;
+      createdResaleListingId = listingId;
+
+      const newListing: ResaleListing = {
+        id: listingId,
+        unitId: data.unitId,
+        returnRecordId: returnRecordId,
+        status: "Em Preparação",
+        listingTitle: `Oportunidade de Revenda — Unidade ${data.unitId}`,
+        listingDescription: `Excelente oportunidade de aquisição com condições especiais. Imóvel pronto para transferência imediata, preço abaixo da tabela vigente.`,
+        highlightTags: ["Oportunidade", "Abaixo da Tabela", "Repasse Direto"],
+        photos: [
+          "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+        ],
+        viewsCount: 0,
+        leadsGeneratedCount: 0,
+      };
+
+      setResaleListings((prev) => [newListing, ...prev]);
+
+      const newPricing: ResalePricing = {
+        id: `prc-${Date.now()}`,
+        unitId: data.unitId,
+        resaleListingId: listingId,
+        originalTablePrice: basePrice,
+        resalePrice: resalePrice,
+        discountPercentageVsTable: discount,
+        pricingReason: "Recuperação Rápida de Caixa",
+        minimumAcceptablePrice: Math.round(basePrice * 0.85),
+      };
+
+      setResalePricingList((prev) => [newPricing, ...prev]);
+
+      const newConditions: ResalePaymentCondition[] = [
+        {
+          id: `cnd-${Date.now()}-1`,
+          resaleListingId: listingId,
+          name: "À Vista com Desconto Especial",
+          downPaymentPercentage: 100,
+          numberOfInstallments: 1,
+          indexer: "Sem Correção",
+          specialDiscountPercentage: 3,
+          allowsFinancing: false,
+          description: "Pagamento integral no ato da escritura pública ou cessão.",
+        },
+        {
+          id: `cnd-${Date.now()}-2`,
+          resaleListingId: listingId,
+          name: "Entrada Facilitada + Saldo em até 24x",
+          downPaymentPercentage: 30,
+          numberOfInstallments: 24,
+          indexer: "IPCA",
+          specialDiscountPercentage: 0,
+          allowsFinancing: true,
+          description: "Entrada de 30% e saldo em 24 parcelas corrigidas pelo IPCA.",
+        },
+      ];
+
+      setResalePaymentConditions((prev) => [...newConditions, ...prev]);
+    }
+
+    addNotification({
+      title: "Distrato Registrado com Sucesso",
+      message: `Unidade ${data.unitId} transferida para fluxo de distrato/devolução.`,
+      type: "info",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return { returnRecordId, resaleListingId: createdResaleListingId };
+  };
+
+  const updateReturnRecord = (id: string, updates: Partial<ReturnRecord>) => {
+    setReturnRecords((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...updates } : r))
+    );
+  };
+
+  const startResaleFlow = (
+    unitId: string,
+    speId: string,
+    originalContractId: string,
+    originalInvestorId: string,
+    originalContractAmount: number,
+    originalTablePrice: number,
+    defaultDiscountPercent = 10,
+    unitDetails?: { unitNumber?: string; speName?: string; areaM2?: number; type?: string }
+  ) => {
+    const orchestrated = moveUnitToResaleFlow(
+      unitId,
+      speId,
+      originalContractId,
+      originalInvestorId,
+      originalContractAmount,
+      originalTablePrice,
+      defaultDiscountPercent,
+      unitDetails
+    );
+
+    // Salva o distrato
+    setReturnRecords((prev) => [orchestrated.returnRecord, ...prev]);
+
+    // Marca contrato original como Distratado
+    if (originalContractId) {
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.id === originalContractId ? { ...c, status: "Distratado" as const } : c
+        )
+      );
+    }
+
+    // Salva o anúncio de revenda em preparação
+    setResaleListings((prev) => [orchestrated.resaleListing, ...prev]);
+
+    // Salva precificação
+    setResalePricingList((prev) => [orchestrated.resalePricing, ...prev]);
+
+    // Salva condições padrão de pagamento
+    setResalePaymentConditions((prev) => [...orchestrated.defaultConditions, ...prev]);
+
+    addNotification({
+      title: "Novo Fluxo de Revenda Criado",
+      message: `Unidade ${unitDetails?.unitNumber || unitId} entrou em fluxo de revenda com ${defaultDiscountPercent}% de desconto vs tabela.`,
+      type: "info",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return {
+      returnRecordId: orchestrated.returnRecord.id,
+      resaleListingId: orchestrated.resaleListing.id,
+    };
+  };
+
+  const addResaleListing = (
+    data: Omit<ResaleListing, "id" | "viewsCount" | "leadsGeneratedCount">
+  ): string => {
+    const id = `rsl-${Date.now()}`;
+    const newListing: ResaleListing = {
+      ...data,
+      id,
+      viewsCount: 0,
+      leadsGeneratedCount: 0,
+    };
+    setResaleListings((prev) => [newListing, ...prev]);
+    return id;
+  };
+
+  const createResaleListing = (
+    unitId: string,
+    data: Partial<Omit<ResaleListing, "id" | "unitId" | "viewsCount" | "leadsGeneratedCount">>
+  ): string => {
+    const id = `rsl-${Date.now()}`;
+    const newListing: ResaleListing = {
+      id,
+      unitId,
+      returnRecordId: data.returnRecordId || "ret-manual",
+      status: data.status || "Em Preparação",
+      listingTitle: data.listingTitle || `Oportunidade — Unidade ${unitId}`,
+      listingDescription:
+        data.listingDescription || "Unidade disponível para revenda com condições exclusivas.",
+      highlightTags: data.highlightTags || ["Oportunidade", "Abaixo da Tabela"],
+      photos: data.photos || [
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=80",
+      ],
+      floorPlanUrl: data.floorPlanUrl,
+      viewsCount: 0,
+      leadsGeneratedCount: 0,
+    };
+    setResaleListings((prev) => [newListing, ...prev]);
+    return id;
+  };
+
+  const updateResaleListing = (id: string, updates: Partial<ResaleListing>) => {
+    setResaleListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, ...updates } : l))
+    );
+  };
+
+  const publishResaleListing = (
+    id: string,
+    overrideFloorCheck = false
+  ): { success: boolean; error?: string } => {
+    const listing = resaleListings.find((l) => l.id === id);
+    if (!listing) return { success: false, error: "Anúncio não encontrado." };
+
+    // Validações obrigatórias para publicação:
+    // 1. Descrição preenchida
+    if (!listing.listingDescription || listing.listingDescription.trim().length < 20) {
+      return { success: false, error: "A descrição do anúncio precisa ter pelo menos 20 caracteres antes de publicar." };
+    }
+
+    // 2. Ao menos 1 foto
+    if (!listing.photos || listing.photos.length === 0) {
+      return { success: false, error: "Adicione pelo menos 1 foto do imóvel antes de publicar o anúncio." };
+    }
+
+    // 3. Preço definido
+    const pricing = resalePricing.find((p) => p.resaleListingId === id);
+    if (!pricing || !pricing.resalePrice || pricing.resalePrice <= 0) {
+      return { success: false, error: "Defina a precificação de revenda antes de publicar." };
+    }
+
+    // 4. Ao menos 1 condição de pagamento cadastrada
+    const conditions = resalePaymentConditions.filter((c) => c.resaleListingId === id);
+    if (conditions.length === 0) {
+      return { success: false, error: "Cadastre ao menos uma condição de pagamento para a revenda." };
+    }
+
+    // 5. Validação de piso mínimo
+    if (!overrideFloorCheck && !pricing.approvedBy) {
+      const isValid = validateResalePriceFloor(pricing.resalePrice, pricing.minimumAcceptablePrice);
+      if (!isValid) {
+        return {
+          success: false,
+          error: `O preço de revenda (R$ ${pricing.resalePrice.toLocaleString("pt-BR")}) está abaixo do piso mínimo aceitável (R$ ${pricing.minimumAcceptablePrice.toLocaleString("pt-BR")}). Requer aprovação explícita da diretoria comercial.`,
+        };
+      }
+    }
+
+    setResaleListings((prev) =>
+      prev.map((l) =>
+        l.id === id
+          ? {
+              ...l,
+              status: "Publicado" as const,
+              publishedAt: new Date().toISOString(),
+              publishedBy: "Comitê Comercial ARV",
+            }
+          : l
+      )
+    );
+
+    addNotification({
+      title: "Anúncio Publicado na Vitrine de Revendas",
+      message: `${listing.listingTitle} agora está visível e disponível para captação de leads.`,
+      type: "success",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return { success: true };
+  };
+
+  const pauseResaleListing = (id: string) => {
+    setResaleListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status: "Pausado" as const } : l))
+    );
+  };
+
+  const reserveResaleListing = (id: string, leadInfo?: Partial<ResaleLead>) => {
+    setResaleListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status: "Reservado" as const } : l))
+    );
+
+    if (leadInfo?.name) {
+      const leadId = `rsl-lead-${Date.now()}`;
+      setResaleLeads((prev) => [
+        {
+          id: leadId,
+          resaleListingId: id,
+          name: leadInfo.name || "Lead Interessado",
+          email: leadInfo.email || "contato@investidor.com.br",
+          phone: leadInfo.phone || "(48) 99999-0000",
+          message: leadInfo.message || "Reserva solicitada via plataforma",
+          source: leadInfo.source || "Vitrine Interna",
+          createdAt: new Date().toISOString(),
+          status: "Proposta Enviada",
+        },
+        ...prev,
+      ]);
+    }
+
+    addNotification({
+      title: "Unidade de Revenda Reservada",
+      message: `A unidade teve reserva temporária aplicada aguardando assinatura da proposta.`,
+      type: "info",
+      date: new Date().toISOString(),
+      read: false,
+    });
+  };
+
+  const markResaleAsSold = (
+    listingId: string,
+    saleData: {
+      investorId?: string;
+      buyerName: string;
+      buyerEmail?: string;
+      buyerPhone?: string;
+      contractAmount: number;
+      purchaseDate?: string;
+      speSharePercentage?: number;
+    }
+  ): string => {
+    const listing = resaleListings.find((l) => l.id === listingId);
+    const returnRec = returnRecords.find((r) => r.id === listing?.returnRecordId);
+
+    // Marca listing como Vendido
+    setResaleListings((prev) =>
+      prev.map((l) => (l.id === listingId ? { ...l, status: "Vendido" as const } : l))
+    );
+
+    // Se comprador for novo, registra ou busca
+    let buyerId = saleData.investorId;
+    if (!buyerId) {
+      buyerId = `inv-rev-${Date.now()}`;
+      const newBuyer: Investor = {
+        id: buyerId,
+        name: saleData.buyerName,
+        cpfCnpj: "000.000.000-00",
+        phone: saleData.buyerPhone || "(48) 99999-9999",
+        whatsapp: saleData.buyerPhone || "(48) 99999-9999",
+        email: saleData.buyerEmail || "comprador@investidor.com.br",
+        address: "Florianópolis - SC",
+        city: "Florianópolis",
+        state: "SC",
+        profession: "Investidor Imobiliário",
+        createdAt: new Date().toISOString().split("T")[0],
+        consultant: "Comercial ARV",
+        notes: `Investidor adquirente de revenda da unidade ${listing?.unitId}. Originado da listagem ${listingId}.`,
+        score: 80,
+        tier: "Select",
+        scoreBreakdown: {
+          volume: 15,
+          numInvestments: 1,
+          assemblyAttendance: 10,
+          portalAccess: 8,
+          clientTenure: 5,
+          satisfaction: 9,
+          reinvestments: 5,
+          referrals: 5,
+          totalScore: 80,
+          tier: "Select",
+        },
+        satisfactionScore: 9,
+        npsCategory: "Promotor",
+        active: true,
+        avatarUrl: `https://i.pravatar.cc/150?u=${buyerId}`,
+      };
+      setInvestors((prev) => [newBuyer, ...prev]);
+    }
+
+    // Cria novo contrato no sistema com referência rastreável resaleListingId
+    const newContractId = `ctr-rev-${Date.now()}`;
+    const newContract: Contract = {
+      id: newContractId,
+      investorId: buyerId,
+      speId: returnRec?.speId || "spe-t58",
+      developmentId: "dev-t58",
+      unitId: listing?.unitId || "unit-rev",
+      contractNumber: `REV-${Math.floor(100000 + Math.random() * 900000)}`,
+      purchaseDate: saleData.purchaseDate || new Date().toISOString().split("T")[0],
+      investedAmount: saleData.contractAmount,
+      speSharePercentage: saleData.speSharePercentage || 1.8,
+      expectedRoiPercentage: 18.0,
+      status: "Ativo",
+      documentUrl: "#",
+      resaleListingId: listingId, // Mantém rastreabilidade de que veio do fluxo de revenda/distrato
+    };
+
+    setContracts((prev) => [newContract, ...prev]);
+
+    // Atualiza leads associados para Convertido
+    setResaleLeads((prev) =>
+      prev.map((ld) =>
+        ld.resaleListingId === listingId && ld.status !== "Perdido"
+          ? { ...ld, status: "Convertido" as const }
+          : ld
+      )
+    );
+
+    addNotification({
+      title: "Revenda Concluída com Sucesso! 🏆",
+      message: `Unidade ${listing?.unitId} vendida por R$ ${saleData.contractAmount.toLocaleString("pt-BR")}. Contrato ${newContract.contractNumber} gerado e unidade retirada da vitrine.`,
+      type: "success",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return newContractId;
+  };
+
+  const setResalePricing = (
+    resaleListingId: string,
+    data: {
+      originalTablePrice: number;
+      resalePrice: number;
+      pricingReason: ResalePricing["pricingReason"];
+      minimumAcceptablePrice: number;
+      approvedBy?: string;
+    }
+  ): { success: boolean; error?: string } => {
+    if (!data.approvedBy && !validateResalePriceFloor(data.resalePrice, data.minimumAcceptablePrice)) {
+      return {
+        success: false,
+        error: `O preço de revenda (R$ ${data.resalePrice.toLocaleString("pt-BR")}) não pode ser inferior ao piso mínimo (R$ ${data.minimumAcceptablePrice.toLocaleString("pt-BR")}) sem aprovação formal da diretoria.`,
+      };
+    }
+
+    const discountPercentageVsTable = calculateResaleDiscount(
+      data.originalTablePrice,
+      data.resalePrice
+    );
+
+    setResalePricingList((prev) => {
+      const existing = prev.find((p) => p.resaleListingId === resaleListingId);
+      if (existing) {
+        return prev.map((p) =>
+          p.resaleListingId === resaleListingId
+            ? {
+                ...p,
+                ...data,
+                discountPercentageVsTable,
+                approvedAt: data.approvedBy ? new Date().toISOString() : p.approvedAt,
+              }
+            : p
+        );
+      }
+      const newPricing: ResalePricing = {
+        id: `prc-${Date.now()}`,
+        unitId: "unit-rev",
+        resaleListingId,
+        ...data,
+        discountPercentageVsTable,
+        approvedAt: data.approvedBy ? new Date().toISOString() : undefined,
+      };
+      return [newPricing, ...prev];
+    });
+
+    return { success: true };
+  };
+
+  const updateResalePricing = (resaleListingId: string, updates: Partial<ResalePricing>) => {
+    setResalePricingList((prev) =>
+      prev.map((p) => {
+        if (p.resaleListingId === resaleListingId) {
+          const merged = { ...p, ...updates };
+          if (updates.resalePrice !== undefined || updates.originalTablePrice !== undefined) {
+            merged.discountPercentageVsTable = calculateResaleDiscount(
+              merged.originalTablePrice,
+              merged.resalePrice
+            );
+          }
+          return merged;
+        }
+        return p;
+      })
+    );
+  };
+
+  const addResalePaymentCondition = (data: Omit<ResalePaymentCondition, "id">): string => {
+    const id = `cnd-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newCond: ResalePaymentCondition = { ...data, id };
+    setResalePaymentConditions((prev) => [newCond, ...prev]);
+    return id;
+  };
+
+  const updateResalePaymentCondition = (
+    id: string,
+    updates: Partial<ResalePaymentCondition>
+  ) => {
+    setResalePaymentConditions((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
+    );
+  };
+
+  const deleteResalePaymentCondition = (id: string) => {
+    setResalePaymentConditions((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const addResaleLead = (data: Omit<ResaleLead, "id" | "createdAt">): string => {
+    const id = `rsl-lead-${Date.now()}`;
+    const newLead: ResaleLead = {
+      ...data,
+      id,
+      createdAt: new Date().toISOString(),
+    };
+    setResaleLeads((prev) => [newLead, ...prev]);
+
+    // Incrementa leadsGeneratedCount no anúncio
+    setResaleListings((prev) =>
+      prev.map((l) =>
+        l.id === data.resaleListingId
+          ? { ...l, leadsGeneratedCount: (l.leadsGeneratedCount || 0) + 1 }
+          : l
+      )
+    );
+
+    addNotification({
+      title: "Novo Lead na Vitrine de Revenda",
+      message: `${data.name} demonstrou interesse em uma unidade de revenda. Telefone: ${data.phone}`,
+      type: "info",
+      date: new Date().toISOString(),
+      read: false,
+    });
+
+    return id;
+  };
+
+  const registerResaleLead = (
+    resaleListingId: string,
+    leadData: Omit<ResaleLead, "id" | "resaleListingId" | "createdAt">
+  ): string => {
+    return addResaleLead({
+      ...leadData,
+      resaleListingId,
+    });
+  };
+
+  const updateResaleLead = (id: string, updates: Partial<ResaleLead>) => {
+    setResaleLeads((prev) =>
+      prev.map((ld) => (ld.id === id ? { ...ld, ...updates } : ld))
+    );
+  };
+
+  const incrementListingView = (listingId: string) => {
+    setResaleListings((prev) =>
+      prev.map((l) =>
+        l.id === listingId ? { ...l, viewsCount: (l.viewsCount || 0) + 1 } : l
+      )
+    );
+  };
+
+  const generateListingDescriptionWithAI = async (params: {
+    unitNumber?: string;
+    speName?: string;
+    developmentName?: string;
+    areaM2?: number;
+    type?: string;
+    floor?: string;
+    solarPosition?: string;
+    resalePrice?: number;
+    originalTablePrice?: number;
+    discountPercentage?: number;
+    paymentConditions?: string[];
+    highlightTags?: string[];
+    isDistrato?: boolean;
+    customInstructions?: string;
+  }): Promise<{ headline: string; description: string; suggestedTags: string[] }> => {
+    try {
+      const response = await fetch("/api/resale/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na chamada da API: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return {
+        headline: result.headline || `Oportunidade Exclusiva • Unidade ${params.unitNumber || ""}`,
+        description: result.description || "Unidade em excelente localização e condições especiais de revenda.",
+        suggestedTags: result.suggestedTags || ["Oportunidade", "Abaixo da Tabela", "Repasse Direto"],
+      };
+    } catch (err) {
+      console.warn("Falha ao gerar descrição com IA via API, usando fallback local estruturado:", err);
+      const discount = params.discountPercentage || 10;
+      const formattedPrice = params.resalePrice ? `R$ ${params.resalePrice.toLocaleString("pt-BR")}` : "sob consulta";
+      return {
+        headline: `Oportunidade — Unidade ${params.unitNumber || "Especial"} no ${params.speName || params.developmentName || "Empreendimento ARV"}`,
+        description: `Excelente oportunidade de repasse direto no ${params.speName || "empreendimento"}. Unidade ${params.type || "Apartamento"} com ${params.areaM2 || 65}m² privativos, posicionamento solar privilegiado e padrão construtivo de alto nível. Valor com ${discount}% de desconto sobre a tabela vigente: ${formattedPrice}. Condições de pagamento diferenciadas, com possibilidade de parcelamento direto ou financiamento bancário facilitado. Unidade disponível para transferência imediata de titularidade.`,
+        suggestedTags: ["Oportunidade", "Repasse Direto", `${discount}% Abaixo da Tabela`, "Transferência Imediata"],
+      };
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -843,6 +1652,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         marketBenchmarkHistory,
         unitPriceComparisons,
         profitabilitySimulations,
+        returnRecords,
+        resaleListings,
+        resalePricing,
+        resalePaymentConditions,
+        resaleLeads,
         darkMode,
         toggleDarkMode,
         isSearchOpen,
@@ -880,6 +1694,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createProfitabilitySimulation,
         deleteProfitabilitySimulation,
         getComparisonForContract,
+        addReturnRecord,
+        registerUnitReturn,
+        updateReturnRecord,
+        startResaleFlow,
+        addResaleListing,
+        createResaleListing,
+        updateResaleListing,
+        publishResaleListing,
+        pauseResaleListing,
+        reserveResaleListing,
+        markResaleAsSold,
+        setResalePricing,
+        updateResalePricing,
+        addResalePaymentCondition,
+        updateResalePaymentCondition,
+        deleteResalePaymentCondition,
+        addResaleLead,
+        registerResaleLead,
+        updateResaleLead,
+        incrementListingView,
+        generateListingDescriptionWithAI,
       }}
     >
       {children}

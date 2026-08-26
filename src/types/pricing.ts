@@ -1,4 +1,4 @@
-export type UnitStatus = "Disponível" | "Reservada" | "Vendida" | "Bloqueada" | "Permuta";
+export type UnitStatus = "Disponível" | "Reservada" | "Vendida" | "Bloqueada" | "Permuta" | "Distratada" | "Em Revenda";
 
 export type UnitType =
   | "Studio"

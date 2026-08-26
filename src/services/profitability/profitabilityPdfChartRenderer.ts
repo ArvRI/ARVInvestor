@@ -82,50 +82,50 @@ export const ProfitabilityPdfChartRenderer = {
 
     // Header Title & Legend
     ctx.fillStyle = "#0f172a";
-    ctx.font = "bold 13px Helvetica, Arial, sans-serif";
-    ctx.fillText("TRAJETÓRIA TEMPORAL DO PATRIMÔNIO • IMÓVEL ARV vs CDI vs IPCA", 16, 22);
+    ctx.font = "bold 11.5px Helvetica, Arial, sans-serif";
+    ctx.fillText("TRAJETÓRIA TEMPORAL DO PATRIMÔNIO • IMÓVEL ARV vs CDI vs IPCA", 16, 20);
 
     ctx.fillStyle = "#64748b";
-    ctx.font = "normal 9.5px Helvetica, Arial, sans-serif";
+    ctx.font = "normal 8.5px Helvetica, Arial, sans-serif";
     ctx.fillText(
-      `Aporte Inicial: ${formatCurrency(simulation.purchasePrice)} | Prazo: ${simulation.horizonMonths} meses | Cenário: ${simulation.appreciationScenario}`,
+      `Aporte: ${formatCurrency(simulation.purchasePrice)} | Prazo: ${simulation.horizonMonths} meses | Cenário: ${simulation.appreciationScenario}`,
       16,
-      37
+      34
     );
 
-    // Legend items on top-right
-    const legendX = width - 330;
-    const legendY = 22;
+    // Legend items on line 2 (right) - guarantees zero overlap with title on line 1
+    const legendX = width - 310;
+    const legendY = 34;
 
     // ARV Legend
     ctx.fillStyle = "#2563eb";
     ctx.beginPath();
-    ctx.arc(legendX, legendY - 3.5, 4.5, 0, Math.PI * 2);
+    ctx.arc(legendX, legendY - 3, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#1e293b";
-    ctx.font = "bold 9px Helvetica, Arial, sans-serif";
-    ctx.fillText("Imóvel ARV", legendX + 8, legendY);
+    ctx.font = "bold 8px Helvetica, Arial, sans-serif";
+    ctx.fillText("Imóvel ARV", legendX + 7, legendY);
 
     // CDI Legend
     ctx.fillStyle = "#d97706";
     ctx.beginPath();
-    ctx.arc(legendX + 90, legendY - 3.5, 4.5, 0, Math.PI * 2);
+    ctx.arc(legendX + 80, legendY - 3, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#1e293b";
-    ctx.fillText("CDI Líquido", legendX + 98, legendY);
+    ctx.fillText("CDI Líquido", legendX + 87, legendY);
 
     // IPCA Legend
     ctx.fillStyle = "#e11d48";
     ctx.beginPath();
-    ctx.arc(legendX + 175, legendY - 3.5, 4.5, 0, Math.PI * 2);
+    ctx.arc(legendX + 160, legendY - 3, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#1e293b";
-    ctx.fillText("IPCA (Inflação)", legendX + 183, legendY);
+    ctx.fillText("IPCA (Inflação)", legendX + 167, legendY);
 
     // Chart Dimensions
     const padLeft = 68;
     const padRight = 36;
-    const padTop = 56;
+    const padTop = 50;
     const padBottom = 38;
     const chartW = width - padLeft - padRight;
     const chartH = height - padTop - padBottom;

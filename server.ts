@@ -286,6 +286,110 @@ Diretrizes de redação:
   });
 
   // ==========================================
+  // REVENDA & ANÚNCIO DE UNIDADES COM IA (GEMINI)
+  // ==========================================
+  app.post("/api/resale/generate-description", async (req, res) => {
+    try {
+      const {
+        unitNumber,
+        speName,
+        developmentName,
+        areaM2,
+        type,
+        floor,
+        solarPosition,
+        resalePrice,
+        originalTablePrice,
+        discountPercentage,
+        paymentConditions,
+        highlightTags,
+        isDistrato,
+        customInstructions,
+      } = req.body;
+
+      const ai = getGeminiClient();
+      const devName = speName || developmentName || "Empreendimento ARV";
+      const unitLabel = unitNumber || "Unidade Comercial";
+      const formattedPrice = resalePrice
+        ? `R$ ${Number(resalePrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+        : "Sob consulta";
+      const formattedOriginalPrice = originalTablePrice
+        ? `R$ ${Number(originalTablePrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+        : "";
+      const discountText = discountPercentage ? `${discountPercentage}% abaixo da tabela vigente` : "";
+
+      if (!ai) {
+        // High quality fallback
+        const fallbackHeadline = `${unitLabel} ${devName} (${areaM2 ? `${areaM2}m²` : "Exclusivo"}) — ${discountPercentage ? `${discountPercentage}% OFF` : "Condição Especial"}`.slice(0, 80);
+        const fallbackDesc = `Excelente oportunidade de repasse no ${devName}. ${type || "Unidade"} ${unitLabel} com ${areaM2 ? `${areaM2}m² privativos` : "planta inteligente"}${floor ? `, ${floor}` : ""}${solarPosition ? `, ${solarPosition}` : ""}. Unidade com liberação imediata para comercialização${isDistrato ? " oriunda de distrato amigável homologado" : ""}, precificada por ${formattedPrice}${formattedOriginalPrice ? ` (de ${formattedOriginalPrice})` : ""}. Condições facilitadas de pagamento com parcelamento direto ou financiamento bancário. Agende um atendimento exclusivo com o time de Relações com Investidores ARV.`;
+
+        return res.json({
+          headline: fallbackHeadline,
+          description: fallbackDesc,
+          suggestedTags: highlightTags || ["Oportunidade", "Abaixo da Tabela", "Distrato", "Pronto p/ Morar"],
+          mode: "fallback",
+        });
+      }
+
+      const prompt = `Gere os dados de anúncio de revenda imobiliária para a vitrine da incorporadora ARV Construtora.
+
+Dados da Unidade:
+- Empreendimento: ${devName}
+- Identificação da Unidade: ${unitLabel}
+- Tipologia: ${type || "Studio / Apartamento"}
+- Área Privativa: ${areaM2 ? `${areaM2} m²` : "Não informada"}
+- Andar / Pavimento: ${floor || "Andar intermediário"}
+- Posição Solar / Vista: ${solarPosition || "Excelente iluminação natural"}
+- Preço de Revenda: ${formattedPrice}
+- Preço de Tabela Original: ${formattedOriginalPrice || "Não informado"}
+- Desconto Aplicado: ${discountText || "Condição diferenciada"}
+- Condições de Pagamento: ${Array.isArray(paymentConditions) ? paymentConditions.join("; ") : paymentConditions || "Entrada facilitada e saldo direto com a incorporadora"}
+- Tags / Destaques: ${Array.isArray(highlightTags) ? highlightTags.join(", ") : highlightTags || "Oportunidade, Repasse"}
+- É originada de distrato/devolução?: ${isDistrato ? "Sim (mencionar oportunidade de repasse de forma elegante e transparente)" : "Não"}
+- Instruções Adicionais: ${customInstructions || "Nenhuma"}
+
+DIRETRIZES DE ESCRITA:
+1. Responda ESTRITAMENTE em formato JSON com os campos:
+   - "headline": string curta (máximo 80 caracteres) para cards na vitrine. Ex: "Studio 302 T58 Spot (32m²) — 10.6% OFF com parcelamento direto"
+   - "description": texto de anúncio comercial em português (entre 400 e 700 caracteres), tom executivo, elegante e direto.
+   - "suggestedTags": array com 3 a 5 tags curtas e impactantes.
+2. NUNCA faça promessas exageradas ou falsas como "lucro garantido" ou "risco zero".
+3. NUNCA invente características não fornecidas.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: "Você é o Diretor Comercial e de Marketing Imobiliário da ARV Construtora. Escreva textos persuasivos, objetivos, transparentes e altamente sofisticados para a vitrine de revendas.",
+          responseMimeType: "application/json",
+          temperature: 0.5,
+        },
+      });
+
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(response.text || "{}");
+      } catch (parseErr) {
+        parsed = {
+          headline: `${unitLabel} no ${devName} — Oportunidade Especial`.slice(0, 80),
+          description: response.text || "",
+          suggestedTags: ["Oportunidade", "Abaixo da Tabela", "Distrato"],
+        };
+      }
+
+      res.json({
+        headline: (parsed.headline || `${unitLabel} ${devName}`).slice(0, 80),
+        description: parsed.description || "",
+        suggestedTags: parsed.suggestedTags || ["Oportunidade", "Condição Especial"],
+        mode: "gemini",
+      });
+    } catch (err: any) {
+      console.error("Erro ao gerar descricao de revenda com IA:", err);
+      res.status(500).json({ error: err.message || "Erro ao gerar anúncio com IA" });
+    }
+  });
+
+  // ==========================================
   // RD STATION API INTEGRATION ENDPOINTS
   // ==========================================
 
